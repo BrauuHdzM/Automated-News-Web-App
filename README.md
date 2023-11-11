@@ -1,6 +1,7 @@
 # Instrucciones generales
 
 Para correr el servidor web en terminal:
+- node server.js
 
 DB:
 - Usuario: root
