@@ -16,17 +16,17 @@
 
 <body>
     <nav class="navbar navbar-expand-md fixed-top navbar-shrink py-3 navbar-light" id="mainNav">
-        <div class="container"><a class="navbar-brand d-flex align-items-center" href="main.html"><span>Generación de noticias</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+        <div class="container"><a class="navbar-brand d-flex align-items-center" href="/"><span>Generación de noticias</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="navcol-1"></div>
             <nav class="navbar navbar-expand-md fixed-top bg-primary navbar-shrink py-3 navbar-dark" id="mainNav-1">
-                <div class="container"><a class="navbar-brand d-flex align-items-center" href="main.html"><span>Generación de noticias</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+                <div class="container"><a class="navbar-brand d-flex align-items-center" href="/"><span>Generación de noticias</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
                     <div class="collapse navbar-collapse" id="navcol-2">
                         <ul class="navbar-nav mx-auto">
                             <li class="nav-item"></li>
                             <li class="nav-item"></li>
                             <li class="nav-item"></li>
                             <li class="nav-item"></li>
-                        </ul><a class="btn btn-warning shadow" role="button" href="main.html">Regresar</a>
+                        </ul><a class="btn btn-warning shadow" role="button" href="/">Regresar</a>
                     </div>
                 </div>
             </nav>
@@ -46,7 +46,7 @@
                         <div class="mb-3"></div><button class="btn btn-primary shadow" type="submit">Crear cuenta</button>
                         <div class="mb-5"></div>
                     </form>
-                    <p class="text-muted">¿Ya tienes una cuenta?&nbsp;<a href="login.html">Inicia sesión&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-arrow-narrow-right">
+                    <p class="text-muted">¿Ya tienes una cuenta?&nbsp;<a href="/login">Inicia sesión&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-arrow-narrow-right">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                 <line x1="15" y1="16" x2="19" y2="12"></line>
@@ -99,14 +99,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                    Swal.fire({ 
                         title: '¡Éxito!',
                         text: data.message,
                         icon: 'success',
                         confirmButtonText: 'Ok'
                     });
                 } else {
-                    Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                    Swal.fire({
                         title: 'Error',
                         text: data.message,
                         icon: 'error',
@@ -115,7 +115,7 @@
                 }
             })
             .catch(error => {
-                Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                Swal.fire({ 
                     title: 'Error',
                     text: 'Hubo un error al enviar la solicitud: ' + error,
                     icon: 'error',
