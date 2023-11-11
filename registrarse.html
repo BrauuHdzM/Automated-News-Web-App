@@ -5,12 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Registrarse</title>
-    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/FontAwesome.css">
-    <link rel="stylesheet" href="assets/css/Raleway.css">
-    <link rel="stylesheet" href="assets/css/Toggle-Switch-toggle-switch.css">
-    <link rel="stylesheet" href="assets/css/Toggle-Switch.css">
-    <link rel="stylesheet" href="assets/css/User-Rating-F19690.css">
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/FontAwesome.css">
+    <link rel="stylesheet" href="/css/Raleway.css">
+    <link rel="stylesheet" href="/css/Toggle-Switch-toggle-switch.css">
+    <link rel="stylesheet" href="/css/Toggle-Switch.css">
+    <link rel="stylesheet" href="/css/User-Rating-F19690.css">
+    
 </head>
 
 <body>
@@ -34,13 +35,14 @@
     <section class="py-4 py-md-5 my-5">
         <div class="container py-md-5">
             <div class="row">
-                <div class="col-md-6 text-center"><img class="img-fluid w-100" src="assets/img/illustrations/register.svg"></div>
+                <div class="col-md-6 text-center"><img class="img-fluid w-100" src="/img/illustrations/register.svg"></div>
                 <div class="col-md-5 col-xl-4 text-center text-md-start">
                     <h2 class="display-6 fw-bold mb-5"><span class="underline pb-1">Regístrate</span></h2>
-                    <form method="post" data-bs-theme="light">
-                        <div class="mb-3"><input class="form-control" type="text" name="nombre" placeholder="Nombre"></div>
-                        <div class="mb-3"><input class="shadow-sm form-control" type="email" name="email" placeholder="Correo electrónico"></div><input class="form-control" type="text" name="usuario" placeholder="Usuario">
-                        <div class="mb-3"></div><input class="shadow-sm form-control" type="password" name="password" placeholder="Contraseña">
+                    <form id="registrationForm">
+                        <div class="mb-3"><input class="form-control" type="text" name="nombre" placeholder="Nombre" required></div>
+                        <div class="mb-3"><input class="shadow-sm form-control" type="email" name="email" placeholder="Correo electrónico" required></div>
+                        <input class="form-control" type="text" name="usuario" placeholder="Usuario" required>
+                        <div class="mb-3"></div><input class="shadow-sm form-control" type="password" name="password" placeholder="Contraseña" required>
                         <div class="mb-3"></div><button class="btn btn-primary shadow" type="submit">Crear cuenta</button>
                         <div class="mb-5"></div>
                     </form>
@@ -72,8 +74,57 @@
             </ul>
         </div>
     </div>
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/js/startup-modern.js"></script>
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+        
+            const formData = new FormData(this);
+            const searchParams = new URLSearchParams();
+        
+            for (const pair of formData) {
+                searchParams.append(pair[0], pair[1]);
+            }
+        
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: searchParams
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                        title: '¡Éxito!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'Ok'
+                    });
+                } else {
+                    Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({ // Utiliza Swal.fire para mostrar un SweetAlert
+                    title: 'Error',
+                    text: 'Hubo un error al enviar la solicitud: ' + error,
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+            });
+        });
+        </script>
+        
 </body>
 
 </html>
