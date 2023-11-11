@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const app = express();
 const saltRounds = 10;
 
@@ -21,9 +22,49 @@ app.use(bodyParser.json());
 // Directorio público para archivos estáticos (CSS, JS, imágenes, etc.)
 app.use(express.static('assets'));
 
+// Manejo de sesión
+app.use(session({
+  secret: 'tu_secreto_secreto', // Cambia esto por una cadena de caracteres real y segura.
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // En producción, cambia esto a `secure: true` y usa HTTPS.
+}));
+
 // Función para obtener una conexión a la base de datos
 async function getDbConnection() {
   return await mysql.createConnection(dbConfig);
+}
+
+//Middleware de autenticación de sesión
+function isAuthenticated(req, res, next) {
+  if (req.session && req.session.userId) {
+    return next(); // El usuario está autenticado, así que continúa con el siguiente middleware
+  } else {
+    return res.redirect('/login'); // El usuario no está autenticado, redirigir a la página de inicio de sesión
+  }
+}
+
+// Función para actualizar usuario
+async function updateUserField(field, newValue, userId, connection) {
+  let updateQuery = '';
+  switch (field) {
+      case 'nombre':
+          updateQuery = 'UPDATE Usuario SET nombre = ? WHERE idUsuario = ?';
+          break;
+      case 'usuario':
+          updateQuery = 'UPDATE Usuario SET usuario = ? WHERE idUsuario = ?';
+          break;
+      case 'contrasena':
+          const hashedPassword = await bcrypt.hash(newValue, saltRounds);
+          updateQuery = 'UPDATE Usuario SET contraseña = ? WHERE idUsuario = ?';
+          newValue = hashedPassword;
+          break;
+      default:
+          throw new Error('Campo para actualizar no reconocido');
+  }
+  
+  const [result] = await connection.execute(updateQuery, [newValue, userId]);
+  return result.affectedRows > 0;
 }
 
 // POST de registro de usuarios
@@ -56,17 +97,16 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// POST de inicio de sesión
 app.post('/login', async (req, res) => {
+  const { usuario, contrasena } = req.body;
+  const connection = await getDbConnection();
   try {
-      const { usuario, contrasena } = req.body;
-      //const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
-      const connection = await getDbConnection();
-      const [rows] = await connection.execute('SELECT contraseña FROM Usuario WHERE usuario = ?', [usuario]);
-
+      const [rows] = await connection.execute('SELECT idUsuario, contraseña FROM Usuario WHERE usuario = ?', [usuario]);
       if (rows.length > 0) {
           const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
           if (validPassword) {
+              // Establecer la sesión del usuario
+              req.session.userId = rows[0].idUsuario;
               res.json({ success: true, message: 'Ingreso exitoso.' });
           } else {
               res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
@@ -74,14 +114,105 @@ app.post('/login', async (req, res) => {
       } else {
           res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
       }
-
-      await connection.end();
   } catch (error) {
       console.error('Error al intentar iniciar sesión: ', error);
       res.status(500).json({ success: false, message: 'Error del servidor al intentar iniciar sesión.' });
+  } finally {
+      if (connection) {
+          await connection.end();
+      }
   }
 });
 
+// Endpoint para cerrar sesión
+app.get('/logout', (req, res) => {
+  // Destruye la sesión y redirige al usuario a la página de inicio
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Error al cerrar sesión: ', err);
+      res.status(500).send('No se pudo cerrar la sesión correctamente');
+    } else {
+      res.redirect('/'); // Redirige al usuario a la página de inicio
+    }
+  });
+});
+
+// POST para modificar los datos del usuario
+app.post('/update-user', async (req, res) => {
+  const { campoModificar, datoReemplazo, contrasena } = req.body;
+  const userId = req.session.userId; // Obtener el ID del usuario desde la sesión
+  const connection = await getDbConnection();
+  try {
+      // Verificar la contraseña actual antes de actualizar los datos
+      const [rows] = await connection.execute('SELECT contraseña FROM Usuario WHERE idUsuario = ?', [userId]);
+      if (rows.length > 0) {
+          const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
+          if (!validPassword) {
+              return res.json({ success: false, message: 'Contraseña actual incorrecta.' });
+          }
+          const updated = await updateUserField(campoModificar, datoReemplazo, userId, connection);
+          if (updated) {
+              res.json({ success: true, message: 'Datos actualizados correctamente.' });
+          } else {
+              res.json({ success: false, message: 'No se pudo actualizar los datos.' });
+          }
+      } else {
+          res.json({ success: false, message: 'Usuario no encontrado.' });
+      }
+  } catch (error) {
+      console.error('Error al actualizar los datos del usuario: ', error);
+      res.status(500).json({ success: false, message: 'Error del servidor al intentar actualizar.' });
+  } finally {
+      if (connection) {
+          await connection.end();
+      }
+  }
+});
+
+app.post('/delete-account', async (req, res) => {
+  const userId = req.session.userId; // Asume que el ID del usuario está en la sesión
+  const { contrasena } = req.body;
+
+  // Verifica que la contraseña se haya proporcionado
+  if (!contrasena) {
+      return res.status(400).json({ success: false, message: 'La contraseña es requerida.' });
+  }
+
+  const connection = await getDbConnection();
+
+  try {
+      // Busca al usuario en la base de datos y obtiene su contraseña hash
+      const [user] = await connection.execute('SELECT contraseña FROM Usuario WHERE idUsuario = ?', [userId]);
+      
+      // Si no se encuentra un usuario o la contraseña hash está undefined, lanza un error
+      if (user.length === 0 || !user[0].contraseña) {
+          throw new Error('No se encontró el usuario o falta la contraseña hash.');
+      }
+
+      // Compara la contraseña ingresada con el hash almacenado
+      const validPassword = await bcrypt.compare(contrasena, user[0].contraseña);
+      if (!validPassword) {
+          throw new Error('Contraseña incorrecta.');
+      }
+
+      // Elimina la cuenta del usuario
+      await connection.execute('DELETE FROM Usuario WHERE idUsuario = ?', [userId]);
+      
+      // Cierra la sesión después de eliminar la cuenta
+      if (req.session) {
+          req.session.destroy();
+      }
+
+      res.json({ success: true, message: 'Tu cuenta ha sido eliminada.' });
+  } catch (error) {
+      console.error('Error al eliminar la cuenta: ', error);
+      res.status(500).json({ success: false, message: 'Contraseña incorrecta' });
+  } finally {
+      if (connection) {
+          await connection.end();
+      }
+  }
+});
 
 // Ruta de inicio de sesión
 app.get('/login', async (req, res) => {
@@ -89,22 +220,22 @@ app.get('/login', async (req, res) => {
 });
 
 // Ruta de pagina principal de articulos
-app.get('/articulos', async (req, res) => {
+app.get('/articulos', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/articulos.html');
 });
 
 // Ruta para nuevo articulo
-app.get('/nuevo-articulo', async (req, res) => {
+app.get('/nuevo-articulo', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/nuevo-articulo.html');
 });
 
 // Ruta para articulo-generado
-app.get('/articulo-generado', async (req, res) => {
+app.get('/articulo-generado', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/articulo-generado.html');
 });
 
 // Ruta para articulos-encontrados
-app.get('/articulos-encontrados', async (req, res) => {
+app.get('/articulos-encontrados', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/articulos-encontrados.html');
 });
 
@@ -124,17 +255,17 @@ app.get('/contrasena-olvidada', async (req, res) => {
 });
 
 // Ruta para dato a modificar
-app.get('/dato-modificar', async (req, res) => {
+app.get('/dato-modificar', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/dato-modificar.html');
 });
 
 // Ruta para eliminar-cuenta
-app.get('/eliminar-cuenta', async (req, res) => {
+app.get('/eliminar-cuenta', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/eliminar-cuenta.html');
 });
 
 // Ruta para calificacion
-app.get('/calificacion', async (req, res) => {
+app.get('/calificacion', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/calificacion.html');
 });
 

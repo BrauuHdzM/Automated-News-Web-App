@@ -41,13 +41,12 @@
             <div class="row d-flex justify-content-center">
                 <div class="col-md-6">
                     <div>
-                        <form class="p-3 p-xl-4" method="post" data-bs-theme="light">
-                            <div class="mb-3"></div>
-                            <div class="mb-3"><input class="form-control" type="password" id="email-1" name="contrasena" placeholder="Contraseña" style="text-align: center;"></div>
-                            <div class="btn-group shadow form-control" role="group"><button class="btn btn-danger" type="button">Eliminar cuenta</button></div>
-                            <div class="mb-3"></div>
-                            <div></div>
-                        </form>
+                        <form id="deleteAccountForm" class="p-3 p-xl-4" method="post" data-bs-theme="light">
+                            <div class="mb-3"><input class="form-control" type="password" name="contrasena" placeholder="Contraseña" required style="text-align: center;"></div>
+                            <div class="btn-group shadow form-control" role="group">
+                                <button class="btn btn-danger" type="submit">Eliminar cuenta</button>
+                            </div>
+                        </form>                        
                     </div>
                 </div>
             </div>
@@ -72,6 +71,51 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('deleteAccountForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar cuenta'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(this);
+                    const searchParams = new URLSearchParams();
+        
+                    for (const pair of formData) {
+                        searchParams.append(pair[0], pair[1]);
+                    }
+                    fetch('/delete-account', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: searchParams
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Eliminada', 'Tu cuenta ha sido eliminada.', 'success').then(() => {
+                                window.location = '/'; // Redirige al inicio o a la pantalla que desees
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'Hubo un error al procesar tu solicitud.', 'error');
+                    });
+                }
+            });
+        });
+        </script>
+        
 </body>
 
 </html>
