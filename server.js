@@ -26,7 +26,7 @@ async function getDbConnection() {
   return await mysql.createConnection(dbConfig);
 }
 
-// Ruta de registro de usuarios
+// POST de registro de usuarios
 app.post('/register', async (req, res) => {
     try {
         const { nombre, email, usuario, password } = req.body;
@@ -53,6 +53,32 @@ app.post('/register', async (req, res) => {
     console.error('Error al registrar el usuario: ', error);
     // Envía una respuesta de error con código de estado 500
     res.status(500).json({ success: false, message: 'Error al registrar el usuario' });
+  }
+});
+
+// POST de inicio de sesión
+app.post('/login', async (req, res) => {
+  try {
+      const { usuario, contrasena } = req.body;
+      //const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+      const connection = await getDbConnection();
+      const [rows] = await connection.execute('SELECT contraseña FROM Usuario WHERE usuario = ?', [usuario]);
+
+      if (rows.length > 0) {
+          const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
+          if (validPassword) {
+              res.json({ success: true, message: 'Ingreso exitoso.' });
+          } else {
+              res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
+          }
+      } else {
+          res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
+      }
+
+      await connection.end();
+  } catch (error) {
+      console.error('Error al intentar iniciar sesión: ', error);
+      res.status(500).json({ success: false, message: 'Error del servidor al intentar iniciar sesión.' });
   }
 });
 
