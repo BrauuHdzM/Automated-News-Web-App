@@ -39,27 +39,9 @@
                     <p class="text-muted mb-5">Selecciona que información agregar para complementar la creación de tu artículo de noticias</p>
                 </div>
             </div>
-            <div class="row mb-2">
-                <div class="col-md-8 mx-auto">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">Título del artículo</h4>
-                            <h6 class="text-muted card-subtitle mb-2">Fecha</h6>
-                            <p class="card-text">Contenido</p><label class="switch">
-  <input type="checkbox">
-  <span class="slider round"></span>
-</label>
-                            <div class="mb-3"></div>
-                            <div class="mb-3"></div>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="card-title">Título del artículo</h4>
-                            <h6 class="text-muted card-subtitle mb-2">Fecha</h6>
-                            <p class="card-text">Contenido</p><label class="switch">
-  <input type="checkbox">
-  <span class="slider round"></span>
-</label>
-                        </div>
+            <section id="resultados" class="py-5 my-5">
+                <!-- Aquí se mostrarán las noticias -->
+            </section>
                         <div class="mb-3"></div>
                         <div class="card-body"><button class="btn btn-primary d-block w-100" type="button">Generar noticia</button></div>
                     </div>
@@ -87,6 +69,28 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script>
+        window.onload = function() {
+            fetch('/api/resultados-noticias')
+                .then(response => response.json())
+                .then(data => {
+                    const seccionResultados = document.getElementById('resultados');
+                    data.forEach(noticia => {
+                        const tarjetaNoticia = document.createElement('div');
+                        tarjetaNoticia.className = 'card my-3';
+                        tarjetaNoticia.innerHTML = `
+                            <div class="card-body">
+                                <h4 class="card-title">${noticia[0]}</h4>
+                                <p class="card-text">${noticia[1]}</p>
+                                <span class="badge bg-primary">Similitud: ${noticia[2].toFixed(2)}</span>
+                            </div>
+                        `;
+                        seccionResultados.appendChild(tarjetaNoticia);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        };
+        </script>
 </body>
 
 </html>

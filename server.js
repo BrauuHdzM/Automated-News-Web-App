@@ -224,7 +224,9 @@ app.post('/generar-noticias', async (req, res) => {
   // Por ejemplo, usando una función "ejecutarScriptPython"
   try {
       const resultados = await ejecutarScriptPython(consulta);
-      res.json(resultados);
+      //res.json(resultados);
+      req.session.resultadosNoticias = resultados;
+      res.redirect('/articulos-encontrados');
   } catch (error) {
       console.error('Error al ejecutar script de Python: ', error);
       res.status(500).send('Error al procesar la solicitud');
@@ -260,7 +262,9 @@ function ejecutarScriptPython(consulta) {
     });
 }
 
-
+app.get('/api/resultados-noticias', (req, res) => {
+  res.json(req.session.resultadosNoticias || []);
+});
 
 // Ruta de inicio de sesión
 app.get('/login', async (req, res) => {
