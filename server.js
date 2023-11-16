@@ -214,6 +214,54 @@ app.post('/delete-account', async (req, res) => {
   }
 });
 
+app.post('/generar-noticias', async (req, res) => {
+  const { lugar, palabrasClave } = req.body;
+
+  // Concatena lugar y palabras clave
+  const consulta = `${lugar} ${palabrasClave}`;
+
+  // Aquí, necesitas llamar a tu script de Python con la consulta
+  // Por ejemplo, usando una función "ejecutarScriptPython"
+  try {
+      const resultados = await ejecutarScriptPython(consulta);
+      res.json(resultados);
+  } catch (error) {
+      console.error('Error al ejecutar script de Python: ', error);
+      res.status(500).send('Error al procesar la solicitud');
+  }
+});
+
+const { spawn } = require('child_process');
+
+function ejecutarScriptPython(consulta) {
+    return new Promise((resolve, reject) => {
+        const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
+        let resultados = '';
+
+        procesoPython.stdout.on('data', (data) => {
+            resultados += data.toString();
+        });
+
+        procesoPython.on('close', (code) => {
+            if (code !== 0) {
+                return reject(`El script de Python finalizó con el código ${code}`);
+            }
+            try {
+                const parsedData = JSON.parse(resultados);
+                resolve(parsedData);
+            } catch (error) {
+                reject('Error al parsear la salida del script de Python: ' + error);
+            }
+        });
+
+        procesoPython.stderr.on('data', (data) => {
+            console.error(`Error al ejecutar el script de Python: ${data}`);
+        });
+    });
+}
+
+
+
 // Ruta de inicio de sesión
 app.get('/login', async (req, res) => {
     res.sendFile(__dirname + '/login.html');

@@ -42,12 +42,12 @@
             <div class="row d-flex justify-content-center">
                 <div class="col-md-6">
                     <div>
-                        <form class="p-3 p-xl-4" method="post" data-bs-theme="light">
+                        <form id="noticiasForm" class="p-3 p-xl-4" action="/generar-noticias" method="post" data-bs-theme="light">
                             <div class="mb-3"><input class="shadow form-control" type="text" id="name-1" name="lugar" placeholder="Lugar"></div>
                             <div class="mb-3"><input class="shadow form-control" id="email-1" name="fecha" placeholder="Fecha"></div>
                             <div class="mb-3"><textarea class="shadow form-control" id="message-1" name="palabrasClave" rows="3" placeholder="Palabras clave"></textarea></div>
                             <div>
-                                <a class="btn btn-primary shadow d-block w-100" href="/articulos-encontrados">Generar</a>
+                                <button type="submit" class="btn btn-primary shadow d-block w-100">Generar</button>
                             </div>
                         </form>
                     </div>
