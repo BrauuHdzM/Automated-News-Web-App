@@ -89,7 +89,7 @@ app.post('/register', async (req, res) => {
 
     await connection.end();
     // Envía una respuesta de éxito con código de estado 201
-    res.status(201).json({ success: true, message: 'Usuario registrado con éxito' });
+    res.status(201).json({ success: true, message: 'Se ha registrado el usuario con éxito' });
   } catch (error) {
     console.error('Error al registrar el usuario: ', error);
     // Envía una respuesta de error con código de estado 500
@@ -107,7 +107,7 @@ app.post('/login', async (req, res) => {
           if (validPassword) {
               // Establecer la sesión del usuario
               req.session.userId = rows[0].idUsuario;
-              res.json({ success: true, message: 'Ingreso exitoso.' });
+              res.json({ success: true, message: 'Bienvenid@ ${usuario}' });
           } else {
               res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
           }
@@ -152,7 +152,7 @@ app.post('/update-user', async (req, res) => {
           }
           const updated = await updateUserField(campoModificar, datoReemplazo, userId, connection);
           if (updated) {
-              res.json({ success: true, message: 'Datos actualizados correctamente.' });
+              res.json({ success: true, message: 'Se han actualizado los datos con éxito.' });
           } else {
               res.json({ success: false, message: 'No se pudo actualizar los datos.' });
           }
@@ -203,7 +203,7 @@ app.post('/delete-account', async (req, res) => {
           req.session.destroy();
       }
 
-      res.json({ success: true, message: 'Tu cuenta ha sido eliminada.' });
+      res.json({ success: true, message: 'Se ha eliminado al usuario del sistema con éxito.' });
   } catch (error) {
       console.error('Error al eliminar la cuenta: ', error);
       res.status(500).json({ success: false, message: 'Contraseña incorrecta' });

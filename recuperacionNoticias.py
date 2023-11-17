@@ -8,12 +8,13 @@ def obtener_noticias_desde_fuentes(fuentes):
     for nombre_fuente, url_feed in fuentes:
         noticias = feedparser.parse(url_feed)
         for entrada in noticias.entries:
+            titulo = entrada.title
             descripcion = entrada.description
-            noticias_descripciones.append(descripcion)
+            noticias_descripciones.append((titulo, descripcion))
     return noticias_descripciones
 
 def main():
-    consulta = sys.argv[1] # Obtén la consulta desde los argumentos
+    consulta = sys.argv[1]  # Obtén la consulta desde los argumentos
 
     model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
@@ -23,23 +24,22 @@ def main():
         ("Expansion", "https://expansion.mx/rss"),
     ]
 
-    noticias_descripciones = obtener_noticias_desde_fuentes(fuentes)
+    noticias = obtener_noticias_desde_fuentes(fuentes)
 
-    sentences1 = [consulta] # Usa la consulta aquí
-    sentences2 = noticias_descripciones
+    sentences1 = [consulta]  # Usa la consulta aquí
+    sentences2 = [noticia[1] for noticia in noticias]  # Solo las descripciones
 
-    
     embeddings1 = model.encode(sentences1, convert_to_tensor=True)
     embeddings2 = model.encode(sentences2, convert_to_tensor=True)
 
-    #Compute cosine-similarities
+    # Compute cosine-similarities
     cosine_scores = util.cos_sim(embeddings1, embeddings2)
 
-    # Create a list of tuples (sentence1, sentence2, score)
-    results = [(sentences1[0], sentences2[i], cosine_scores[0][i].item()) for i in range(len(sentences2))]
+    # Create a list of tuples (consulta, titulo, descripcion, score)
+    results = [(consulta, noticias[i][0], noticias[i][1], cosine_scores[0][i].item()) for i in range(len(noticias))]
 
     # Sort the results by score in descending order
-    sorted_results = sorted(results, key=lambda x: x[2], reverse=True)
+    sorted_results = sorted(results, key=lambda x: x[3], reverse=True)
 
     # Devuelve solo los 3 primeros resultados
     print(json.dumps(sorted_results[:3]))

@@ -90,8 +90,8 @@
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        title: '¡Bienvenido!',
-                        text: 'Ingreso exitoso.',
+                        title: '¡Bienvenid@!',
+                        text: `Bienvenid@ ${formData.get('usuario')}`,
                         icon: 'success',
                         confirmButtonText: 'Continuar'
                     }).then((result) => {

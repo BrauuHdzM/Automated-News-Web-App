@@ -79,14 +79,15 @@
                         const tarjetaNoticia = document.createElement('div');
                         tarjetaNoticia.className = 'card my-3';
                         tarjetaNoticia.innerHTML = `
-                            <div class="card-body">
-                                <h4 class="card-title">${noticia[0]}</h4>
-                                <p class="card-text">${noticia[1]}</p>
-                                <span class="badge bg-primary">Similitud: ${noticia[2].toFixed(2)}</span>
-                            </div>
-                        `;
+                                                    <div class="card-body">
+                                                    <h4 class="card-title">${noticia[1]}</h4> <!-- Usar el título aquí -->
+                                                    <p class="card-text">${noticia[2]}</p> <!-- Usar la descripción aquí -->
+                                                    <span class="badge bg-primary">Similitud: ${noticia[3].toFixed(2)}</span>
+                                                    </div>
+                                                    `;
                         seccionResultados.appendChild(tarjetaNoticia);
                     });
+
                 })
                 .catch(error => console.error('Error:', error));
         };
