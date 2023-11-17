@@ -71,7 +71,7 @@ async function updateUserField(field, newValue, userId, connection) {
 app.post('/register', async (req, res) => {
     try {
         const { nombre, email, usuario, password } = req.body;
-        console.log({ nombre, email, usuario, password });
+        //console.log({ nombre, email, usuario, password });
         
         if (!password || password.trim() === '') {
           // Envía un JSON con el error si la contraseña no se proporciona

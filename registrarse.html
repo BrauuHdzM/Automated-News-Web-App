@@ -104,6 +104,10 @@
                         text: data.message,
                         icon: 'success',
                         confirmButtonText: 'Ok'
+                    }).then((result) => {
+                        if (result.value) {
+                            window.location.href = '/login';
+                        }
                     });
                 } else {
                     Swal.fire({
@@ -123,7 +127,8 @@
                 });
             });
         });
-        </script>
+    </script>
+    
         
 </body>
 
