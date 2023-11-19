@@ -76,6 +76,26 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    document.getElementById('noticiasForm').addEventListener('submit', function(event){
+    
+        Swal.fire({
+            title: 'Buscando noticias...',
+            text: 'Por favor espera mientras se realiza la búsqueda.',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            willOpen: () => {
+                Swal.showLoading()
+            }
+        });
+    
+        // Realiza la acción de envío del formulario aquí
+        // Por ejemplo, puedes usar AJAX para enviar los datos y luego cerrar SweetAlert en el callback
+    });
+    </script>
+
 </body>
 
 </html>
