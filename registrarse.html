@@ -41,10 +41,15 @@
                     <form id="registrationForm">
                         <div class="mb-3"><input class="form-control" type="text" name="nombre" placeholder="Nombre" required></div>
                         <div class="mb-3"><input class="shadow-sm form-control" type="email" name="email" placeholder="Correo electrónico" required></div>
-                        <input class="form-control" type="text" name="usuario" placeholder="Usuario" required>
+                        <div class="mb-3"><input class="form-control" type="text" name="usuario" placeholder="Usuario" required></div>
                         <div class="mb-3"></div><input class="shadow-sm form-control" type="password" name="password" placeholder="Contraseña" required>
                         <div class="mb-3"></div><button class="btn btn-primary shadow" type="submit">Crear cuenta</button>
                         <div class="mb-5"></div>
+                    </form>
+                    <form id="verificationForm" style="display:none;">
+                        <div class="mb-3"><input class="form-control" type="text" name="usuario" placeholder="Usuario" required></div>
+                        <div class="mb-3"><input class="form-control" type="text" name="verificationCode" placeholder="Código de Verificación" required></div>
+                        <button class="btn btn-primary shadow" type="submit">Verificar Cuenta</button>
                     </form>
                     <p class="text-muted">¿Ya tienes una cuenta?&nbsp;<a href="/login">Inicia sesión&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-arrow-narrow-right">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -88,7 +93,16 @@
             for (const pair of formData) {
                 searchParams.append(pair[0], pair[1]);
             }
-        
+            // Mostrar pantalla de espera
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Por favor, espere mientras enviamos su correo de verificación.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+    
             fetch('/register', {
                 method: 'POST',
                 headers: {
@@ -98,16 +112,15 @@
             })
             .then(response => response.json())
             .then(data => {
+                Swal.close();
                 if (data.success) {
+                    // Ocultar formulario de registro y mostrar formulario de verificación
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('verificationForm').style.display = 'block';
                     Swal.fire({ 
-                        title: '¡Éxito!',
+                        title: '¡Registro Exitoso!',
                         text: data.message,
-                        icon: 'success',
-                        confirmButtonText: 'Ok'
-                    }).then((result) => {
-                        if (result.value) {
-                            window.location.href = '/login';
-                        }
+                        icon: 'success'
                     });
                 } else {
                     Swal.fire({
@@ -128,7 +141,54 @@
             });
         });
     </script>
+
+<script>
+    document.getElementById('verificationForm').addEventListener('submit', function(event) {
+        event.preventDefault();
     
+        const formData = new FormData(this);
+        const searchParams = new URLSearchParams();
+
+        for (const pair of formData) {
+            searchParams.append(pair[0], pair[1]);
+        }
+
+        fetch('/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: searchParams
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({ 
+                    title: '¡Verificación Exitosa!',
+                    text: data.message,
+                    icon: 'success'
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({ 
+                title: 'Error',
+                text: 'Hubo un error al enviar la solicitud: ' + error,
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        });
+    });
+</script>
         
 </body>
 

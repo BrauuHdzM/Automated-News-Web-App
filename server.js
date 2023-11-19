@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const nodemailer = require('nodemailer'); // Asegúrate de tener instalado nodemailer con `npm install nodemailer`
 const app = express();
 const saltRounds = 10;
 
@@ -29,6 +30,17 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: false } // En producción, cambia esto a `secure: true` y usa HTTPS.
 }));
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'tt2024a013@gmail.com',
+    pass: 'mkzh jjlx hgzc xuzv'
+  },
+  tls: {
+    rejectUnauthorized: false // Agregar esta línea para ignorar la verificación de SSL
+  }
+});
 
 // Función para obtener una conexión a la base de datos
 async function getDbConnection() {
@@ -67,36 +79,81 @@ async function updateUserField(field, newValue, userId, connection) {
   return result.affectedRows > 0;
 }
 
-// POST de registro de usuarios
+// POST para registrar un nuevo usuario
 app.post('/register', async (req, res) => {
     try {
-        const { nombre, email, usuario, password } = req.body;
-        //console.log({ nombre, email, usuario, password });
-        
-        if (!password || password.trim() === '') {
-          // Envía un JSON con el error si la contraseña no se proporciona
-          return res.status(400).json({ success: false, message: 'La contraseña es requerida.' });
+      const { nombre, email, usuario, password } = req.body;
+  
+      // Verificar si el usuario o correo ya existen
+      const connection = await getDbConnection();
+      const [users] = await connection.execute('SELECT * FROM Usuario WHERE usuario = ? OR correo = ?', [usuario, email]);
+      if (users.length > 0) {
+        return res.status(400).json({ success: false, message: 'El usuario o correo ya existen.' });
+      }
+  
+      // Verificar la fortaleza de la contraseña
+      if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)) {
+        return res.status(400).json({ success: false, message: 'La contraseña no cumple con los requisitos.' });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+  
+      // Generar código de verificación
+      const verificationCode = Math.floor(100000 + Math.random() * 900000); // Código de 6 dígitos
+  
+      // Guardar usuario en la base de datos con estado "no verificado" y el código de verificación
+      await connection.execute(
+        'INSERT INTO Usuario (nombre, usuario, correo, contraseña, codigoVerificacion) VALUES (?, ?, ?, ?, ?)',
+        [nombre, usuario, email, hashedPassword, verificationCode]
+      );
+  
+      // Enviar correo con código de verificación
+      const mailOptions = {
+        from: 'tt2024a013@gmail.com',
+        to: email,
+        subject: 'Verificación de tu cuenta',
+        text: `Tu código de verificación es: ${verificationCode}`
+      };
+  
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+          res.status(500).json({ success: false, message: 'Error al enviar correo electrónico.' });
+        } else {
+          console.log('Correo enviado: ' + info.response);
+          res.status(201).json({ success: true, message: 'Usuario registrado. Por favor, verifica tu correo electrónico.' });
         }
-    
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
+      });
+  
+    } catch (error) {
+      console.error('Error al registrar el usuario: ', error);
+      res.status(500).json({ success: false, message: 'Error al registrar el usuario' });
+    }
+  });
 
-    const connection = await getDbConnection();
-    const [result] = await connection.execute(
-      'INSERT INTO Usuario (nombre, usuario, correo, contraseña) VALUES (?, ?, ?, ?)',
-      [nombre, usuario, email, hashedPassword]
-    );
-
-    await connection.end();
-    // Envía una respuesta de éxito con código de estado 201
-    res.status(201).json({ success: true, message: 'Se ha registrado el usuario con éxito' });
-  } catch (error) {
-    console.error('Error al registrar el usuario: ', error);
-    // Envía una respuesta de error con código de estado 500
-    res.status(500).json({ success: false, message: 'Error al registrar el usuario' });
-  }
-});
-
+  // POST para verificar el código de verificación
+  app.post('/verify', async (req, res) => {
+    try {
+      const { usuario, verificationCode } = req.body;
+      const connection = await getDbConnection();
+  
+      // Verificar el código en la base de datos
+      const [user] = await connection.execute('SELECT * FROM Usuario WHERE usuario = ? AND codigoVerificacion = ?', [usuario, verificationCode]);
+  
+      if (user.length === 0) {
+        return res.status(400).json({ success: false, message: 'Código de verificación incorrecto o usuario no encontrado.' });
+      }
+  
+      // Si el código es correcto, actualizar el estado del usuario a "verificado"
+      await connection.execute('UPDATE Usuario SET verificado = 1 WHERE usuario = ?', [usuario]);
+  
+      res.status(200).json({ success: true, message: 'Cuenta verificada con éxito.' });
+    } catch (error) {
+      console.error('Error al verificar la cuenta: ', error);
+      res.status(500).json({ success: false, message: 'Error al verificar la cuenta' });
+    }
+  });
+  
 app.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
   const connection = await getDbConnection();
