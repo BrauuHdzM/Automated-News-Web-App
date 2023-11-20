@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html data-bs-theme="light" lang="es">
 
 <head>
     <meta charset="utf-8">
@@ -44,7 +44,9 @@
                 <!-- Aquí se mostrarán las noticias -->
             </section>
                         <div class="mb-3"></div>
-                        <div class="card-body"><button class="btn btn-primary d-block w-100" type="button">Generar noticia</button></div>
+                        <div class="card-body">
+                            <button id="botonGenerar" class="btn btn-primary d-block w-100" type="button">Generar noticia</button>
+                        </div>                        
                     </div>
                 </div>
             </div>
@@ -70,29 +72,53 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         window.onload = function() {
             fetch('/api/resultados-noticias')
                 .then(response => response.json())
                 .then(data => {
                     const seccionResultados = document.getElementById('resultados');
-                    data.forEach(noticia => {
-                        const tarjetaNoticia = document.createElement('div');
-                        tarjetaNoticia.className = 'card my-3';
-                        tarjetaNoticia.innerHTML = `
-                                                    <div class="card-body">
-                                                    <h4 class="card-title">${noticia[1]}</h4> <!-- Usar el título aquí -->
-                                                    <p class="card-text">${noticia[2]}</p> <!-- Usar la descripción aquí -->
-                                                    <span class="badge bg-primary">Similitud: ${noticia[3].toFixed(2)}</span>
-                                                    </div>
-                                                    `;
-                        seccionResultados.appendChild(tarjetaNoticia);
-                    });
-
+                    const botonGenerar = document.getElementById('botonGenerar');
+    
+                    if (data.length === 0) {
+                        // Ocultar el botón de generar noticias
+                        botonGenerar.hidden = true;
+    
+                        // Mostrar mensaje con SweetAlert
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Sin resultados',
+                            text: 'No hemos encontrado una noticia similar en los medios que tenemos disponibles'
+                        });
+                    } else {
+                        // Procesar y mostrar las noticias
+                        data.forEach(noticia => {
+                            const tarjetaNoticia = document.createElement('div');
+                            tarjetaNoticia.className = 'card my-3';
+                            tarjetaNoticia.innerHTML = `
+                                                        <div class="card-body">
+                                                            <h4 class="card-title">${noticia[1]}</h4>
+                                                            <p class="card-text">${noticia[2]}</p>
+                                                            <span class="badge bg-primary">Similitud: ${noticia[3].toFixed(2)}</span>
+                                                        </div>
+                                                        `;
+                            seccionResultados.appendChild(tarjetaNoticia);
+                        });
+                    }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un problema al obtener las noticias'
+                    });
+                });
         };
-        </script>
+    </script>
+    
+    
 </body>
 
 </html>

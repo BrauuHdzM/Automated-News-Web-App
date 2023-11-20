@@ -38,11 +38,11 @@ def main():
     # Create a list of tuples (consulta, titulo, descripcion, score)
     results = [(consulta, noticias[i][0], noticias[i][1], cosine_scores[0][i].item()) for i in range(len(noticias))]
 
-    # Sort the results by score in descending order
-    sorted_results = sorted(results, key=lambda x: x[3], reverse=True)
+    # Filtra los resultados por un umbral de similitud
+    filtered_results = [result for result in results if result[3] >= 0.55]
 
-    # Devuelve solo los 3 primeros resultados
-    print(json.dumps(sorted_results[:3]))
+    # Imprime los resultados filtrados
+    print(json.dumps(filtered_results))
 
 if __name__ == "__main__":
     main()

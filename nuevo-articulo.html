@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html data-bs-theme="light" lang="es">
 
 <head>
     <meta charset="utf-8">
@@ -79,20 +79,28 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-    document.getElementById('noticiasForm').addEventListener('submit', function(event){
-    
-        Swal.fire({
-            title: 'Buscando noticias...',
-            text: 'Por favor espera mientras se realiza la búsqueda.',
-            showConfirmButton: false,
-            allowOutsideClick: false,
-            willOpen: () => {
-                Swal.showLoading()
+        document.getElementById('noticiasForm').addEventListener('submit', function(event){
+            var lugar = document.getElementById('name-1').value;
+            var fecha = document.getElementsByName('fecha')[0].value;
+            var palabrasClave = document.getElementById('message-1').value;
+        
+            if (lugar === '' || fecha === '' || palabrasClave === '') {
+                Swal.fire('Por favor, ingresa todos los datos que necesitamos para generar tu artículo');
+                event.preventDefault(); // Evita que se envíe el formulario
+            } else {
+                Swal.fire({
+                    title: 'Buscando noticias...',
+                    text: 'Por favor espera mientras se realiza la búsqueda.',
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    willOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
             }
         });
-    
-    });
-    </script>
+        </script>
+        
 
 </body>
 
