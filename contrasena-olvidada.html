@@ -38,10 +38,12 @@
                 <div class="col-md-5 col-xl-4 text-center text-md-start">
                     <h2 class="display-6 fw-bold mb-4">¿Olvidaste tu contraseña?</h2>
                     <p class="text-muted">Ingresa el correo asociado a tu cuenta, te enviaremos las instrucciones para recuperarla</p>
-                    <form method="post" data-bs-theme="light">
-                        <div class="mb-3"><input class="shadow form-control" type="email" name="email" placeholder="Correo electrónico"></div>
-                        <div class="mb-5"><button class="btn btn-primary shadow" type="submit">Recuperar contraseña</button></div>
-                    </form>
+                    <form id="passwordResetForm">
+                        <div class="mb-3">
+                          <input class="shadow form-control" type="email" name="email" placeholder="Correo electrónico" required>
+                        </div>
+                        <button class="btn btn-primary shadow" type="submit">Recuperar contraseña</button>
+                      </form>
                 </div>
             </div>
         </div>
@@ -66,6 +68,48 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.getElementById('passwordResetForm').addEventListener('submit', function(event) {
+          event.preventDefault();
+      
+          const formData = new FormData(this);
+          fetch('/request-password-reset', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Correo Enviado',
+                    text: data.message,
+                    icon: 'success'
+                }).then(() => {
+            window.location.href = '/reset-password-form'; // Redirige a la nueva página
+            });
+            } else {
+              Swal.fire({
+                title: 'Error',
+                text: data.message,
+                icon: 'error'
+              });
+            }
+          })
+          .catch(error => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Ocurrió un error al enviar la solicitud.',
+              icon: 'error'
+            });
+          });
+        });
+      </script>
+
 </body>
 
 </html>

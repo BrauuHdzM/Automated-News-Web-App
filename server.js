@@ -3,17 +3,17 @@ const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const nodemailer = require('nodemailer'); // Asegúrate de tener instalado nodemailer con `npm install nodemailer`
+const nodemailer = require('nodemailer'); 
 const app = express();
 const saltRounds = 10;
 
 // Configuración de conexión a la base de datos
 const dbConfig = {
-  host: '127.0.0.1', // Sin el puerto aquí
-  port: 3306,        // Puerto como un número, no como una cadena
-  user: 'root',      // tu nombre de usuario de MySQL
-  password: 'root',  // tu contraseña de MySQL
-  database: 'tt'     // el nombre de tu base de datos
+  host: '127.0.0.1', 
+  port: 3306,        
+  user: 'root',      
+  password: 'root',  
+  database: 'tt'     
 };
 
 // Middleware para parsear el cuerpo de las solicitudes POST
@@ -153,7 +153,86 @@ app.post('/register', async (req, res) => {
       res.status(500).json({ success: false, message: 'Error al verificar la cuenta' });
     }
   });
+
+// POST para solicitar recuperación de contraseña
+app.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+  const connection = await getDbConnection();
+
+  try {
+    // Verifica si el usuario existe
+    const [users] = await connection.execute('SELECT * FROM Usuario WHERE correo = ?', [email]);
+    if (users.length === 0) {
+      res.status(400).json({ success: false, message: 'Correo no encontrado.' });
+      return;
+    }
+
+    // Generar token de restablecimiento de contraseña
+    const resetToken = Math.floor(100000 + Math.random() * 900000);
+
+    // Actualiza el token
+    await connection.execute('UPDATE Usuario SET codigoVerificacion = ? WHERE correo = ?', [resetToken, email]);
+
+    // Enviar correo con instrucciones y token
+    const mailOptions = {
+      from: 'tt2024a013@gmail.com',
+      to: email,
+      subject: 'Recuperación de contraseña',
+      text: `Tu código de recuperación de contraseña es: ${resetToken}`
+    };
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error al enviar correo electrónico.' });
+      } else {
+        console.log('Correo enviado: ' + info.response);
+        res.status(201).json({ success: true, message: 'Usuario registrado. Por favor, verifica tu correo electrónico.' });
+      }
+    });
+
+    res.json({ success: true, message: 'Correo de recuperación enviado.' });
+  } catch (error) {
+    console.error('Error al solicitar recuperación de contraseña: ', error);
+    res.status(500).json({ success: false, message: 'Error del servidor.' });
+  }
+});
   
+// POST para actualizar la contraseña
+app.post('/reset-password', async (req, res) => {
+  const { email, verificationCode, newPassword } = req.body;
+  const connection = await getDbConnection();
+
+  try {
+    // Verificar código de verificación
+    const [user] = await connection.execute(
+      'SELECT * FROM Usuario WHERE correo = ? AND codigoVerificacion = ?',
+      [email, verificationCode]
+    );
+
+    if (user.length === 0) {
+      return res.status(400).json({ success: false, message: 'Datos inválidos.' });
+    }
+
+    // Verificar la fortaleza de la contraseña
+    if (!newPassword.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)) {
+      return res.status(400).json({ success: false, message: 'La contraseña no cumple con los requisitos.' });
+    }
+
+    // Actualizar contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    await connection.execute(
+      'UPDATE Usuario SET contraseña = ? WHERE correo = ?',
+      [hashedPassword, email]
+    );
+
+    res.json({ success: true, message: 'Contraseña actualizada con éxito.' });
+  } catch (error) {
+    console.error('Error al actualizar contraseña: ', error);
+    res.status(500).json({ success: false, message: 'Error del servidor.' });
+  }
+});
+
 app.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
   const connection = await getDbConnection();
@@ -318,6 +397,10 @@ function ejecutarScriptPython(consulta) {
         });
     });
 }
+
+app.get('/reset-password-form', async (req, res) => {
+  res.sendFile(__dirname + '/nueva-contrasena.html');
+});
 
 app.get('/api/resultados-noticias', (req, res) => {
   res.json(req.session.resultadosNoticias || []);
