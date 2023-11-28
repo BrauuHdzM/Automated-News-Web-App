@@ -39,7 +39,7 @@ def main():
     results = [(consulta, noticias[i][0], noticias[i][1], cosine_scores[0][i].item()) for i in range(len(noticias))]
 
     # Filtra los resultados por un umbral de similitud
-    filtered_results = [result for result in results if result[3] >= 0.55]
+    filtered_results = [result for result in results if result[3] >= 0.60]
 
     # Imprime los resultados filtrados
     print(json.dumps(filtered_results))
