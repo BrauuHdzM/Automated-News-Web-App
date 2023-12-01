@@ -112,7 +112,7 @@ app.post('/register', async (req, res) => {
         from: 'tt2024a013@gmail.com',
         to: email,
         subject: 'Verificación de tu cuenta',
-        text: `Tu código de verificación es: ${verificationCode}`
+        text: `Tu nombre de usuario es: ${usuario}, y tu código de verificación es: ${verificationCode}`
       };
   
       transporter.sendMail(mailOptions, function(error, info){

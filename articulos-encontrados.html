@@ -97,11 +97,19 @@
                             const tarjetaNoticia = document.createElement('div');
                             tarjetaNoticia.className = 'card my-3';
                             tarjetaNoticia.innerHTML = `
-                                                        <div class="card-body">
-                                                            <h4 class="card-title">${noticia[1]}</h4>
-                                                            <p class="card-text">${noticia[2]}</p>
-                                                            <span class="badge bg-primary">Similitud: ${noticia[3].toFixed(2)}</span>
+                                                    <div class="card-body">
+                                                        <h4 class="card-title">${noticia[1]}</h4> <!-- Título de la noticia -->
+                                                        <p class="card-date">${noticia[2]}</p> <!-- Fecha de publicación -->
+                                                        <p class="card-source">${noticia[0]}</p> <!-- Medio que publica -->
+                                                        <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
+                                                        <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" value="" id="includeNewsCheck">
+                                                            <label class="form-check-label" for="includeNewsCheck">
+                                                                Incluir Noticia
+                                                            </label>
                                                         </div>
+                                                    </div>
                                                         `;
                             seccionResultados.appendChild(tarjetaNoticia);
                         });
