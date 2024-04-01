@@ -49,7 +49,7 @@ def main():
     # Create a list of tuples (consulta, titulo, descripcion, score)
     # Create a list of tuples (medio, titulo, fecha, enlace, descripcion, score)
     results = [
-        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[0][i].item()) 
+        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[0][i].item(), i) 
         for i in range(len(noticias))
     ]
 

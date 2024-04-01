@@ -104,9 +104,10 @@
                                                         <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
                                                         <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
                                                         <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="" id="includeNewsCheck">
-                                                            <label class="form-check-label" for="includeNewsCheck">
-                                                                Incluir Noticia
+                                                            <input class="form-check-input" type="checkbox" value="${noticia[5]}" id="includeNewsCheck${noticia[5]}">
+                                                                <label class="form-check-label" for="includeNewsCheck${noticia[5]}">
+                                                                    Incluir Noticia
+                                                                </label>
                                                             </label>
                                                         </div>
                                                     </div>
@@ -123,6 +124,48 @@
                         text: 'Hubo un problema al obtener las noticias'
                     });
                 });
+
+                document.getElementById('botonGenerar').addEventListener('click', function() {
+                    const checkboxes = document.querySelectorAll('.form-check-input:checked');
+                    const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
+                        const cardBody = checkbox.closest('.card-body');
+                        return {
+                            id: checkbox.value,
+                            titulo: escapeJSONString(cardBody.querySelector('.card-title').textContent),
+                            fecha: cardBody.querySelector('.card-date').textContent,
+                            medio: cardBody.querySelector('.card-source').textContent,
+                            cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
+                        };
+                    });
+
+                    fetch('/generar-noticias', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ noticiasSeleccionadas }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+
+                    function escapeJSONString(str) {
+                        return str
+                            .replace(/"/g, '\\"') // Escapa comillas dobles regulares.
+                            .replace(/“/g, '\\"') // Escapa comillas inteligentes de apertura.
+                            .replace(/”/g, '\\"'); // Escapa comillas inteligentes de cierre.
+                    }
+
+
+                });
+
+                
+
+
         };
     </script>
     

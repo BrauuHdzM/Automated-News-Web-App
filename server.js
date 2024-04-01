@@ -350,16 +350,14 @@ app.post('/delete-account', async (req, res) => {
   }
 });
 
-app.post('/generar-noticias', async (req, res) => {
+app.post('/encontrar-noticias', async (req, res) => {
   const { lugar, palabrasClave } = req.body;
 
   // Concatena lugar y palabras clave
   const consulta = `${lugar} ${palabrasClave}`;
 
-  // Aquí, necesitas llamar a tu script de Python con la consulta
-  // Por ejemplo, usando una función "ejecutarScriptPython"
   try {
-      const resultados = await ejecutarScriptPython(consulta);
+      const resultados = await buscarNoticias(consulta);
       //res.json(resultados);
       req.session.resultadosNoticias = resultados;
       res.redirect('/articulos-encontrados');
@@ -369,10 +367,28 @@ app.post('/generar-noticias', async (req, res) => {
   }
 });
 
+// Middlewares para parsear el cuerpo de las solicitudes
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/generar-noticias', async (req, res) => {
+  const { noticiasSeleccionadas } = req.body;
+  try {
+      console.log('Consultas recibidas: ', noticiasSeleccionadas);
+      const resultados = await generarArticulo(JSON.stringify(noticiasSeleccionadas));
+      res.json(resultados);
+  } catch (error) {
+      console.error('Error al ejecutar script de Python: ', error);
+      res.status(500).send('Error al procesar la solicitud');
+  }
+
+});
+
 const { spawn } = require('child_process');
 
-function ejecutarScriptPython(consulta) {
+function buscarNoticias(consulta) {
     return new Promise((resolve, reject) => {
+        console.log('Enviando consulta a Python:', consulta);
         const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
         let resultados = '';
 
@@ -391,11 +407,40 @@ function ejecutarScriptPython(consulta) {
                 reject('Error al parsear la salida del script de Python: ' + error);
             }
         });
-
-        procesoPython.stderr.on('data', (data) => {
-            console.error(`Error al ejecutar el script de Python: ${data}`);
-        });
     });
+}
+
+function generarArticulo(consulta) {
+  return new Promise((resolve, reject) => {
+      console.log('Enviando consulta a Python:', consulta);
+      const procesoPython = spawn('python', ['generacionArticulo.py']);
+
+      // Envía los datos a través de stdin
+      procesoPython.stdin.write(consulta);
+      procesoPython.stdin.end();
+
+      let resultados = '';
+
+      procesoPython.stdout.on('data', (data) => {
+          resultados += data.toString();
+      });
+
+      procesoPython.on('close', (code) => {
+          if (code !== 0) {
+              return reject(`El script de Python finalizó con el código ${code}`);
+          }
+          try {
+              const parsedData = JSON.parse(resultados);
+              resolve(parsedData);
+          } catch (error) {
+              reject('Error al parsear la salida del script de Python: ' + error);
+          }
+      });
+
+      procesoPython.stderr.on('data', (data) => {
+          console.error(`Error al ejecutar el script de Python: ${data}`);
+      });
+  });
 }
 
 app.get('/reset-password-form', async (req, res) => {
