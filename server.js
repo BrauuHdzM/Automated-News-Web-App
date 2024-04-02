@@ -368,7 +368,7 @@ app.post('/encontrar-noticias', async (req, res) => {
   const { lugar, palabrasClave, fecha } = req.body;
   const consulta =`${lugar}, ${palabrasClave}`;
 
-  
+
   try {
       const resultados = await buscarNoticias(consulta);
       //res.json(resultados);
@@ -454,6 +454,23 @@ function generarArticulo(consulta) {
       });
   });
 }
+
+app.post('/api/guardarArticulo', async (req, res) => {
+  const connection = await getDbConnection();
+    try {
+      const userId = req.session.userId;
+      const { dataContenido, dataTitulo, dataFecha } = req.body; 
+      const sql = `INSERT INTO ArticuloNoticia (idUsuario, titulo, contenido, fecha) VALUES (?, ?, ?, ?)`;
+      const valores = [userId, dataTitulo, dataContenido, dataFecha];
+      await connection.execute(sql, valores);
+
+      // Envía una respuesta exitosa
+      res.json({ success: true, message: "Artículo guardado correctamente" });
+} catch (error) {
+      console.error('Error al guardar el artículo en la base de datos: ', error);
+      res.status(500).json({ success: false, message: "Error al guardar el artículo en la base de datos", error: error.message });
+}
+});
 
 app.get('/api/articulo-generado', (req, res) => {
   if (req.session.articuloGenerado) {
