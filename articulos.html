@@ -51,34 +51,8 @@
                 </div>
             </div>
             <div class="mb-3"></div>
-            <div></div>
-            <a href="/articulo-generado">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Título</h4>
-                        <h6 class="text-muted card-subtitle mb-2">Fecha</h6>
-                    </div>
-                </div>
-            </a>
-            <div class="mb-3"></div>
-            <a href="/articulo-generado">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Título</h4>
-                        <h6 class="text-muted card-subtitle mb-2">Fecha</h6>
-                    </div>
-                </div>
-            </a>
-            <div class="mb-3"></div>
-            <a href="/articulo-generado">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Título</h4>
-                        <h6 class="text-muted card-subtitle mb-2">Fecha</h6>
-                    </div>
-                </div>
-            </a>
-        </div>
+            <div id="contenedor-articulos"></div>
+            
     </section>
     <footer></footer>
     <footer>
@@ -102,6 +76,46 @@
     </footer>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          fetch('/mis-articulos')
+            .then(response => response.json())
+            .then(articulos => {
+              const contenedorArticulos = document.getElementById('contenedor-articulos');
+              articulos.forEach(articulo => {
+                // Crear el div de margen
+                const divMargin = document.createElement('div');
+                divMargin.className = 'mb-3';
+        
+                // Crear la estructura del artículo
+                const articuloHTML = `
+                    <a href="/articulo-generado/${articulo.idArticulo}">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">${articulo.titulo}</h4>
+                                <h6 class="text-muted card-subtitle mb-2">${articulo.fecha}</h6>
+                                <!-- Puedes agregar aquí más información si es necesario -->
+                            </div>
+                        </div>
+                    </a>
+                `;
+        
+                // Insertar el div de margen superior
+                contenedorArticulos.appendChild(divMargin);
+        
+                // Insertar el artículo
+                const divArticulo = document.createElement('div'); // Crear un div para el contenido del artículo
+                divArticulo.innerHTML = articuloHTML;
+                contenedorArticulos.appendChild(divArticulo);
+        
+                // Insertar el div de margen inferior
+                contenedorArticulos.appendChild(divMargin.cloneNode()); // Clona el divMargin para reutilizarlo
+              });
+            })
+            .catch(error => console.error('Error al cargar los artículos:', error));
+        });
+        </script>
+        
 </body>
 
 </html>

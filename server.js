@@ -350,7 +350,22 @@ app.post('/delete-account', async (req, res) => {
   }
 });
 
+app.get('/mis-articulos', async (req, res) => {
+  try {
+    const idUsuario = req.session.userId; // ejemplo, ajusta según tu lógica de autenticación
+    const connection = await getDbConnection();
+    
+    const [articulos] = await connection.query('SELECT * FROM ArticuloNoticia WHERE idUsuario = ?', [idUsuario]);
+
+    res.json(articulos);
+  } catch (error) {
+    console.error('Error al obtener artículos:', error);
+    res.status(500).send('Ocurrió un error al obtener los artículos');
+  }
+});
+
 app.post('/encontrar-noticias', async (req, res) => {
+
 
   const { lugar, palabrasClave, fecha } = req.body;
 
