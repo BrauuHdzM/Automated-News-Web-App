@@ -4,7 +4,7 @@ import traceback
 import os
 from openai import OpenAI
 
-os.environ['OPENAI_API_KEY'] = "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"
+os.environ['OPENAI_API_KEY'] = ""
 
 client = OpenAI(
   api_key=os.environ['OPENAI_API_KEY'], 
