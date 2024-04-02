@@ -351,7 +351,8 @@ app.post('/delete-account', async (req, res) => {
 });
 
 app.post('/encontrar-noticias', async (req, res) => {
-  const { lugar, palabrasClave } = req.body;
+
+  const { lugar, palabrasClave, fecha } = req.body;
 
   // Concatena lugar y palabras clave
   const consulta = `${lugar} ${palabrasClave}`;
@@ -375,13 +376,13 @@ app.post('/generar-noticias', async (req, res) => {
   const { noticiasSeleccionadas } = req.body;
   try {
       console.log('Consultas recibidas: ', noticiasSeleccionadas);
-      const resultados = await generarArticulo(JSON.stringify(noticiasSeleccionadas));
-      res.json(resultados);
+      const articulo = await generarArticulo(JSON.stringify(noticiasSeleccionadas));
+      req.session.articuloGenerado = articulo; // Suponiendo que esto guarda el artículo correctamente
+      res.json({success: true, redirectUrl: '/articulo-generado'});
   } catch (error) {
       console.error('Error al ejecutar script de Python: ', error);
-      res.status(500).send('Error al procesar la solicitud');
+      res.status(500).json({success: false, message: 'Error al procesar la solicitud'});
   }
-
 });
 
 const { spawn } = require('child_process');
@@ -427,21 +428,30 @@ function generarArticulo(consulta) {
 
       procesoPython.on('close', (code) => {
           if (code !== 0) {
+              console.error(`Error al ejecutar el script de Python: ${resultados}`);
               return reject(`El script de Python finalizó con el código ${code}`);
-          }
-          try {
-              const parsedData = JSON.parse(resultados);
-              resolve(parsedData);
-          } catch (error) {
-              reject('Error al parsear la salida del script de Python: ' + error);
+          } else {
+              resolve(resultados);
+
           }
       });
 
       procesoPython.stderr.on('data', (data) => {
-          console.error(`Error al ejecutar el script de Python: ${data}`);
+          console.error(`stderr: ${data}`);
       });
   });
 }
+
+app.get('/api/articulo-generado', (req, res) => {
+  if (req.session.articuloGenerado) {
+    // Asegúrate de devolver una respuesta en formato JSON
+    res.json({ articulo: req.session.articuloGenerado });
+  } else {
+    res.status(404).json({ error: 'No se encontró el artículo generado' });
+  }
+});
+
+
 
 app.get('/reset-password-form', async (req, res) => {
   res.sendFile(__dirname + '/nueva-contrasena.html');

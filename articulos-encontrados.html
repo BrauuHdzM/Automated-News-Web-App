@@ -126,6 +126,16 @@
                 });
 
                 document.getElementById('botonGenerar').addEventListener('click', function() {
+                    Swal.fire({
+                    title: 'Generando artículo...',
+                    text: 'Por favor, espera un momento.',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    willOpen: () => {
+                        Swal.showLoading() // Muestra un loader dentro del Swal
+                    }
+                });
                     const checkboxes = document.querySelectorAll('.form-check-input:checked');
                     const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
                         const cardBody = checkbox.closest('.card-body');
@@ -147,12 +157,17 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data);
+                        if(data.success && data.redirectUrl) {
+                            window.location.href = data.redirectUrl; // Redirecciona al cliente
+                        } else {
+                            // Manejar el caso de error
+                            console.error(data.message || 'Error desconocido');
+                        }
                     })
                     .catch((error) => {
                         console.error('Error:', error);
                     });
-
+                                
                     function escapeJSONString(str) {
                         return str
                             .replace(/"/g, '\\"') // Escapa comillas dobles regulares.
@@ -162,9 +177,6 @@
 
 
                 });
-
-                
-
 
         };
     </script>

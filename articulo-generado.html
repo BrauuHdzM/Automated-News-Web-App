@@ -45,7 +45,7 @@
                 <div class="d-flex align-items-center align-items-sm-start"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-quote fs-1 text-warning flex-shrink-0">
                         <path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 9 7.558V11a1 1 0 0 0 1 1h2Zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612c0-.351.021-.703.062-1.054.062-.372.166-.703.31-.992.145-.29.331-.517.559-.683.227-.186.516-.279.868-.279V3c-.579 0-1.085.124-1.52.372a3.322 3.322 0 0 0-1.085.992 4.92 4.92 0 0 0-.62 1.458A7.712 7.712 0 0 0 3 7.558V11a1 1 0 0 0 1 1h2Z"></path>
                     </svg>
-                    <div>
+                    <div id="articulo">
                         <p class="fs-6 mb-3 ms-2"><span style="color: rgb(0, 0, 0);">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vel feugiat neque. Suspendisse a tempor odio, sit amet sollicitudin ante. In odio ex, dignissim et neque sed, lacinia sagittis risus. In hac habitasse platea dictumst. Pellentesque dui felis, interdum nec cursus ac, commodo ac ligula. Integer porttitor, ipsum et mollis ultrices, risus ex tristique odio, non iaculis ante nisl vel urna. Quisque et neque eget massa rutrum efficitur nec eget velit. Nullam et ligula lorem. Quisque eu metus ipsum. Sed in tellus quis ligula luctus sollicitudin et sit amet leo. Pellentesque finibus augue a orci aliquet commodo. Cras luctus tristique velit et congue.&nbsp;</span></p>
                         <div class="d-flex ms-2">
                             <div class="d-flex mb-3">
@@ -82,6 +82,25 @@
     </div>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+
+    <script>
+        window.onload = function() {
+            fetch('/api/articulo-generado')
+                .then(response => response.text())
+                .then(data => {
+                    let parsedResponse = JSON.parse(data);
+                    let articulo = JSON.parse(parsedResponse.articulo);
+                    let dataContenido = articulo.data;
+                    document.getElementById('articulo').innerHTML = dataContenido;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        };
+        </script>
+        
+    
+        
 </body>
 
 </html>
