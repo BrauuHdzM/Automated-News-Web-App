@@ -101,6 +101,7 @@
                                                         <h4 class="card-title">${noticia[1]}</h4> <!-- Título de la noticia -->
                                                         <p class="card-date">${noticia[2]}</p> <!-- Fecha de publicación -->
                                                         <p class="card-source">${noticia[0]}</p> <!-- Medio que publica -->
+                                                        <p class="card-place">${noticia[6]}</p> <!-- Cuerpo de la noticia -->
                                                         <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
                                                         <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
                                                         <div class="form-check">
@@ -145,6 +146,7 @@
                             fecha: cardBody.querySelector('.card-date').textContent,
                             medio: cardBody.querySelector('.card-source').textContent,
                             cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
+                            lugar: cardBody.querySelector('.card-place').textContent,
                         };
                     });
 

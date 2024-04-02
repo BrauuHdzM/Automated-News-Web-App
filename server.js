@@ -365,13 +365,10 @@ app.get('/mis-articulos', async (req, res) => {
 });
 
 app.post('/encontrar-noticias', async (req, res) => {
-
-
   const { lugar, palabrasClave, fecha } = req.body;
+  const consulta =`${lugar}, ${palabrasClave}`;
 
-  // Concatena lugar y palabras clave
-  const consulta = `${lugar} ${palabrasClave}`;
-
+  
   try {
       const resultados = await buscarNoticias(consulta);
       //res.json(resultados);
@@ -466,8 +463,6 @@ app.get('/api/articulo-generado', (req, res) => {
     res.status(404).json({ error: 'No se encontró el artículo generado' });
   }
 });
-
-
 
 app.get('/reset-password-form', async (req, res) => {
   res.sendFile(__dirname + '/nueva-contrasena.html');

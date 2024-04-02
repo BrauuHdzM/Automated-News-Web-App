@@ -40,6 +40,8 @@ def main():
     sentences1 = [consulta]  # Usa la consulta aquí
     sentences2 = [noticia[1] + " " + noticia[3] for noticia in noticias]
 
+    lugar =  consulta.split(',', 1)[0]
+
     embeddings1 = model.encode(sentences1, convert_to_tensor=True)
     embeddings2 = model.encode(sentences2, convert_to_tensor=True)
 
@@ -49,12 +51,12 @@ def main():
     # Create a list of tuples (consulta, titulo, descripcion, score)
     # Create a list of tuples (medio, titulo, fecha, enlace, descripcion, score)
     results = [
-        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[0][i].item(), i) 
+        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[0][i].item(), i, lugar) 
         for i in range(len(noticias))
     ]
 
     # Filtra los resultados por un umbral de similitud
-    filtered_results = [result for result in results if result[4] >= 0.66]
+    filtered_results = [result for result in results if result[4] >= 0.55]
 
     # Imprime los resultados filtrados
     print(json.dumps(filtered_results))
