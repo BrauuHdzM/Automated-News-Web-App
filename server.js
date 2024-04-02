@@ -385,6 +385,7 @@ app.post('/generar-noticias', async (req, res) => {
   }
 });
 
+
 const { spawn } = require('child_process');
 
 function buscarNoticias(consulta) {

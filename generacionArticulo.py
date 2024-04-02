@@ -3,11 +3,11 @@ import json
 import traceback
 import os
 from openai import OpenAI
+from decouple import config
 
-os.environ['OPENAI_API_KEY'] = ""
 
 client = OpenAI(
-  api_key=os.environ['OPENAI_API_KEY'], 
+  api_key=config('OPENAI_API_KEY'), 
 )
 
 def generar_nueva_noticia(noticias):
