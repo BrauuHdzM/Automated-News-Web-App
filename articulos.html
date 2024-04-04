@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="/css/Toggle-Switch-toggle-switch.css">
     <link rel="stylesheet" href="/css/Toggle-Switch.css">
     <link rel="stylesheet" href="/css/User-Rating-F19690.css">
+
+    <style>
+        .clickable {
+          cursor: pointer;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -83,38 +90,41 @@
             .then(articulos => {
               const contenedorArticulos = document.getElementById('contenedor-articulos');
               articulos.forEach(articulo => {
-                // Crear el div de margen
                 const divMargin = document.createElement('div');
                 divMargin.className = 'mb-3';
-        
-                // Crear la estructura del artículo
-                const articuloHTML = `
-                    <a href="/articulo-generado/${articulo.idArticulo}">
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title">${articulo.titulo}</h4>
-                                <h6 class="text-muted card-subtitle mb-2">${articulo.fecha}</h6>
-                                <!-- Puedes agregar aquí más información si es necesario -->
-                            </div>
-                        </div>
-                    </a>
+                
+                // Modificamos la estructura del artículo para incluir un data-id
+                const articuloDiv = document.createElement('div');
+                articuloDiv.className = 'card clickable';
+                articuloDiv.innerHTML = `
+                  <div class="card-body clickable" data-id="${articulo.idArticulo}">
+                    <h4 class="card-title">${articulo.titulo}</h4>
+                    <h6 class="text-muted card-subtitle mb-2">${articulo.fecha}</h6>
+                    <!-- Más información del artículo aquí -->
+                  </div>
                 `;
+                articuloDiv.addEventListener('click', function() {
+                  const articuloId = this.querySelector('.card-body').getAttribute('data-id');
+                  fetch(`/articulo/${articuloId}`)
+                    .then(response => response.json())
+                    .then(articulo => {
+                      // Suponiendo que quieras almacenar los datos del artículo en localStorage para luego acceder a ellos en articulo.html
+                      localStorage.setItem('articuloActual', JSON.stringify(articulo));
+                      // Redirigir al usuario a articulo.html
+                      window.location.href = '/articulo';
+                    })
+                    .catch(error => console.error('Error al cargar el artículo:', error));
+                });
         
-                // Insertar el div de margen superior
                 contenedorArticulos.appendChild(divMargin);
-        
-                // Insertar el artículo
-                const divArticulo = document.createElement('div'); // Crear un div para el contenido del artículo
-                divArticulo.innerHTML = articuloHTML;
-                contenedorArticulos.appendChild(divArticulo);
-        
-                // Insertar el div de margen inferior
-                contenedorArticulos.appendChild(divMargin.cloneNode()); // Clona el divMargin para reutilizarlo
+                contenedorArticulos.appendChild(articuloDiv);
+                contenedorArticulos.appendChild(divMargin.cloneNode());
               });
             })
             .catch(error => console.error('Error al cargar los artículos:', error));
         });
         </script>
+        
         
 </body>
 

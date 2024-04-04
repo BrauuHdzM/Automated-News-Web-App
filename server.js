@@ -481,6 +481,47 @@ app.get('/api/articulo-generado', (req, res) => {
   }
 });
 
+// Ruta para manejar las solicitudes de artículos individuales
+app.get('/articulo/:idArticulo', async (req, res) => {
+  const connection = await getDbConnection();
+  const idArticulo = req.params.idArticulo;
+  const userId = req.session.userId;
+
+  try {
+    const [rows, fields] = await connection.query('SELECT * FROM ArticuloNoticia WHERE idArticulo = ? AND idUsuario = ?', [idArticulo, userId]);
+    const articulo = rows[0];
+    
+    if (!articulo) {
+      res.status(404).send('Artículo no encontrado');
+    } else {
+      res.json(articulo);
+    }
+  } catch (error) {
+    console.error('Error al obtener el artículo:', error);
+    res.status(500).send('Error al obtener el artículo');
+  }
+});
+
+// Ruta para eliminar un artículo específico
+app.delete('/eliminarArticulo/:idArticulo', async (req, res) => {
+  const connection = await getDbConnection();
+  const { idArticulo } = req.params;
+
+  try {
+    const [result] = await connection.query('DELETE FROM ArticuloNoticia WHERE idArticulo = ?', [idArticulo]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Artículo no encontrado o ya fue eliminado' });
+    }
+
+    res.json({ message: 'Artículo eliminado con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar el artículo:', error);
+    res.status(500).json({ message: 'Error al eliminar el artículo' });
+  }
+});
+
+
 app.get('/reset-password-form', async (req, res) => {
   res.sendFile(__dirname + '/nueva-contrasena.html');
 });
@@ -548,6 +589,10 @@ app.get('/calificacion', isAuthenticated, async (req, res) => {
 app.get('/registrarse', (req, res) => {
   // Asegúrate de que el archivo 'registrarse.html' exista en la carpeta 'assets'
   res.sendFile(__dirname + '/registrarse.html');
+});
+
+app.get('/articulo', (req, res) => {
+  res.sendFile(__dirname + '/articulo.html');
 });
 
 // Ruta principal 
