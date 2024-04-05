@@ -36,12 +36,10 @@
             <div class="row mb-2">
                 <div class="col-md-8 col-xl-6 text-center mx-auto">
                     <h2 class="display-6 fw-bold mb-5"><span class="pb-3 underline">Artículos encontrados</span></h2>
-                    <!-- Cambiar mb-5 por mb-3 o mb-4 para reducir el espacio en el margen inferior -->
                     <p class="text-muted mb-3">Selecciona que información agregar para complementar la creación de tu artículo de noticias</p>
                 </div>                
             </div>
             <section id="resultados" class="py-5 my-5">
-                <!-- Aquí se mostrarán las noticias -->
             </section>
                         <div class="mb-3"></div>
                         <div class="card-body">
@@ -82,17 +80,20 @@
                     const botonGenerar = document.getElementById('botonGenerar');
     
                     if (data.length === 0) {
-                        // Ocultar el botón de generar noticias
                         botonGenerar.hidden = true;
-    
-                        // Mostrar mensaje con SweetAlert
                         Swal.fire({
                             icon: 'info',
                             title: 'Sin resultados',
-                            text: 'No hemos encontrado una noticia similar en los medios que tenemos disponibles'
+                            text: 'No hemos encontrado una noticia similar en los medios que tenemos disponibles',
+                            confirmButtonText: 'Regresar',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/articulos';
+                            } else {
+                                window.location.href = '/articulos';
+                            }
                         });
                     } else {
-                        // Procesar y mostrar las noticias
                         data.forEach(noticia => {
                             const tarjetaNoticia = document.createElement('div');
                             tarjetaNoticia.className = 'card my-3';
@@ -131,10 +132,10 @@
                     title: 'Generando artículo...',
                     text: 'Por favor, espera un momento.',
                     icon: 'info',
-                    showConfirmButton: true,
+                    showConfirmButton: false,
                     allowOutsideClick: false,
                     willOpen: () => {
-                        Swal.showLoading() // Muestra un loader dentro del Swal
+                        Swal.showLoading()
                     }
                 });
                     const checkboxes = document.querySelectorAll('.form-check-input:checked');
@@ -160,9 +161,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if(data.success && data.redirectUrl) {
-                            window.location.href = data.redirectUrl; // Redirecciona al cliente
+                            window.location.href = data.redirectUrl;
                         } else {
-                            // Manejar el caso de error
                             console.error(data.message || 'Error desconocido');
                         }
                     })

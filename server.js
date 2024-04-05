@@ -364,6 +364,17 @@ app.get('/mis-articulos', async (req, res) => {
   }
 });
 
+app.get('/api/recuperarNombre', async (req, res) => {
+  const connection = await getDbConnection();
+  const idUsuario = req.session.userId;
+  const [rows] = await connection.execute('SELECT nombre FROM Usuario WHERE idUsuario = ?', [idUsuario]);
+  if (rows.length > 0) {
+      res.json({ nombre: rows[0].nombre });
+  } else {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+  }
+});
+
 app.post('/encontrar-noticias', async (req, res) => {
   const { lugar, palabrasClave, fecha } = req.body;
   const consulta =`${lugar}, ${palabrasClave}`;

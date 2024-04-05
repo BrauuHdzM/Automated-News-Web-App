@@ -99,20 +99,15 @@
         document.addEventListener('DOMContentLoaded', function() {
           const articulo = JSON.parse(localStorage.getItem('articuloActual'));
           if (articulo) {
-            // Aquí actualizarías el DOM con la información del artículo
-            // Por ejemplo:
             document.getElementById('titulo').textContent = articulo.titulo;
             document.getElementById('fecha').textContent = articulo.fecha;
             document.getElementById('articulo').textContent = articulo.contenido;
 
-            // Almacenar el idArticulo para usarlo después, por ejemplo, para eliminar
             localStorage.setItem('idArticuloActual', articulo.idArticulo);
             
-            // Limpia el localStorage una vez que los datos han sido utilizados
             localStorage.removeItem('articuloActual');
           } else {
             console.error('No se encontró el artículo');
-            // Manejar el caso de que no se encuentre el artículo
           }
         });
         </script>

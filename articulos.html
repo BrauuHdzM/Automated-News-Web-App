@@ -37,7 +37,7 @@
                         </button>
                         <ul class="dropdown-menu">
                             <!-- Opción "Nombre" -->
-                            <li><a class="dropdown-item" href="#">Nombre</a></li>
+                            <li><a class="dropdown-item" id="nombreUsuario">Nombre</a></li>
                             <!-- Opción "Modificar usuario" -->
                             <li><a class="dropdown-item" href="/dato-modificar">Modificar usuario</a></li>
                             <!-- Opción "Borrar usuario" -->
@@ -124,7 +124,17 @@
             .catch(error => console.error('Error al cargar los artículos:', error));
         });
         </script>
-        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('/api/recuperarNombre')
+                    .then(response => response.json())
+                    .then(usuario => {
+                        localStorage.setItem('usuario', JSON.stringify(usuario));
+                        document.getElementById('nombreUsuario').innerHTML = usuario.nombre;
+                    })
+                    .catch(error => console.error('Error al cargar el usuario:', error));
+            });
+        </script>
         
 </body>
 
