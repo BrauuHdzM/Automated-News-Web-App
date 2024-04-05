@@ -47,7 +47,6 @@
                         <div class="mb-5"></div>
                     </form>
                     <form id="verificationForm" style="display:none;">
-                        <div class="mb-3"><input class="form-control" type="text" name="usuario" placeholder="Usuario" required></div>
                         <div class="mb-3"><input class="form-control" type="text" name="verificationCode" placeholder="Código de Verificación" required></div>
                         <button class="btn btn-primary shadow" type="submit">Verificar Cuenta</button>
                     </form>
@@ -93,6 +92,11 @@
             for (const pair of formData) {
                 searchParams.append(pair[0], pair[1]);
             }
+            
+            // Guardar el nombre de usuario en localStorage
+            const username = formData.get('usuario'); // Asumiendo que el campo se llama 'username'
+            localStorage.setItem('usuarioParaVerificacion', username);
+
             // Mostrar pantalla de espera
             Swal.fire({
                 title: 'Procesando...',
@@ -148,6 +152,9 @@
     
         const formData = new FormData(this);
         const searchParams = new URLSearchParams();
+
+        const usernameForVerification = localStorage.getItem('usuarioParaVerificacion');
+        searchParams.append('usuario', usernameForVerification);
 
         for (const pair of formData) {
             searchParams.append(pair[0], pair[1]);

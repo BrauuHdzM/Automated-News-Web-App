@@ -103,8 +103,8 @@ app.post('/register', async (req, res) => {
   
       // Guardar usuario en la base de datos con estado "no verificado" y el código de verificación
       await connection.execute(
-        'INSERT INTO Usuario (nombre, usuario, correo, contraseña, codigoVerificacion) VALUES (?, ?, ?, ?, ?)',
-        [nombre, usuario, email, hashedPassword, verificationCode]
+        'INSERT INTO Usuario (nombre, usuario, correo, contraseña, codigoVerificacion, verificado) VALUES (?, ?, ?, ?, ?, ?)',
+        [nombre, usuario, email, hashedPassword, verificationCode, 0]
       );
   
       // Enviar correo con código de verificación
@@ -237,13 +237,17 @@ app.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
   const connection = await getDbConnection();
   try {
-      const [rows] = await connection.execute('SELECT idUsuario, contraseña FROM Usuario WHERE usuario = ?', [usuario]);
+      const [rows] = await connection.execute('SELECT idUsuario, contraseña, verificado FROM Usuario WHERE usuario = ?', [usuario]);
       if (rows.length > 0) {
+          // Comprobar si la cuenta está verificada
+          if (rows[0].verificado != 1) {
+              return res.json({ success: false, message: 'La cuenta no está verificada. Por favor, verifica tu cuenta antes de intentar iniciar sesión.' });
+          }
           const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
           if (validPassword) {
               // Establecer la sesión del usuario
               req.session.userId = rows[0].idUsuario;
-              res.json({ success: true, message: 'Bienvenid@ ${usuario}' });
+              res.json({ success: true, message: `Bienvenid@ ${usuario}` });
           } else {
               res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
           }
@@ -259,6 +263,7 @@ app.post('/login', async (req, res) => {
       }
   }
 });
+
 
 // Endpoint para cerrar sesión
 app.get('/logout', (req, res) => {
