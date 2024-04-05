@@ -336,6 +336,7 @@ app.post('/delete-account', async (req, res) => {
           throw new Error('Contraseña incorrecta.');
       }
 
+      await connection.execute('DELETE FROM ArticuloNoticia WHERE idUsuario = ?', [userId]);
       // Elimina la cuenta del usuario
       await connection.execute('DELETE FROM Usuario WHERE idUsuario = ?', [userId]);
       
