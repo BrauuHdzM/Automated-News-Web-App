@@ -5,16 +5,17 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const nodemailer = require('nodemailer'); 
 const { spawn } = require('child_process');
+require('dotenv').config();
 const app = express();
 const saltRounds = 10;
 
 // Configuración de conexión a la base de datos
 const dbConfig = {
-  host: '127.0.0.1', 
-  port: 3306,        
-  user: 'root',      
-  password: 'root',  
-  database: 'tt'     
+  host: process.env.DB_HOST, 
+  port: process.env.DB_PORT,        
+  user: process.env.DB_USER,      
+  password: process.env.DB_PASSWORD,  
+  database: process.env.DB_DATABASE     
 };
 
 // Middleware para parsear el cuerpo de las solicitudes POST
