@@ -4,6 +4,7 @@ const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const nodemailer = require('nodemailer'); 
+const { spawn } = require('child_process');
 const app = express();
 const saltRounds = 10;
 
@@ -25,10 +26,10 @@ app.use(express.static('assets'));
 
 // Manejo de sesión
 app.use(session({
-  secret: 'tu_secreto_secreto', // Cambia esto por una cadena de caracteres real y segura.
+  secret: 'tu_secreto_secreto', 
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // En producción, cambia esto a `secure: true` y usa HTTPS.
+  cookie: { secure: false } // Cambiar a 'true' si se usa HTTPS
 }));
 
 const transporter = nodemailer.createTransport({
@@ -38,25 +39,25 @@ const transporter = nodemailer.createTransport({
     pass: 'mkzh jjlx hgzc xuzv'
   },
   tls: {
-    rejectUnauthorized: false // Agregar esta línea para ignorar la verificación de SSL
+    rejectUnauthorized: false // Ignora la verificación de SSL
   }
 });
 
-// Función para obtener una conexión a la base de datos
+// Obtener una conexión a la base de datos
 async function getDbConnection() {
   return await mysql.createConnection(dbConfig);
 }
 
-//Middleware de autenticación de sesión
+// Middleware de autenticación de sesión
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.userId) {
-    return next(); // El usuario está autenticado, así que continúa con el siguiente middleware
+    return next(); 
   } else {
-    return res.redirect('/login'); // El usuario no está autenticado, redirigir a la página de inicio de sesión
+    return res.redirect('/login'); 
   }
 }
 
-// Función para actualizar usuario
+// Actualizar datos del usuario
 async function updateUserField(field, newValue, userId, connection) {
   let updateQuery = '';
   switch (field) {
@@ -91,11 +92,12 @@ app.post('/register', async (req, res) => {
         return res.status(400).json({ success: false, message: 'El usuario o correo ya existen.' });
       }
   
-      // Verificar la fortaleza de la contraseña
+      // Verificar requisitos de la contraseña
       if (!password.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)) {
         return res.status(400).json({ success: false, message: 'La contraseña no cumple con los requisitos.' });
       }
-  
+      
+      // Hashear la contraseña
       const hashedPassword = await bcrypt.hash(password, saltRounds);
   
       // Generar código de verificación
@@ -114,7 +116,7 @@ app.post('/register', async (req, res) => {
         subject: 'Verificación de tu cuenta',
         text: `Tu nombre de usuario es: ${usuario}, y tu código de verificación es: ${verificationCode}`
       };
-  
+      
       transporter.sendMail(mailOptions, function(error, info){
         if (error) {
           console.log(error);
@@ -131,7 +133,7 @@ app.post('/register', async (req, res) => {
     }
   });
 
-  // POST para verificar el código de verificación
+  // POST para verificar el usuario
   app.post('/verify', async (req, res) => {
     try {
       const { usuario, verificationCode } = req.body;
@@ -233,6 +235,7 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
+// POST para iniciar sesión
 app.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
   const connection = await getDbConnection();
@@ -263,7 +266,6 @@ app.post('/login', async (req, res) => {
       }
   }
 });
-
 
 // Endpoint para cerrar sesión
 app.get('/logout', (req, res) => {
@@ -310,6 +312,7 @@ app.post('/update-user', async (req, res) => {
   }
 });
 
+// POST para eliminar la cuenta del usuario
 app.post('/delete-account', async (req, res) => {
   const userId = req.session.userId; // Asume que el ID del usuario está en la sesión
   const { contrasena } = req.body;
@@ -336,7 +339,10 @@ app.post('/delete-account', async (req, res) => {
           throw new Error('Contraseña incorrecta.');
       }
 
+      // Elimina los registros relacionados con el usuario
       await connection.execute('DELETE FROM ArticuloNoticia WHERE idUsuario = ?', [userId]);
+      //await connection.execute('DELETE FROM Calificacion WHERE idUsuario = ?', [userId]);
+
       // Elimina la cuenta del usuario
       await connection.execute('DELETE FROM Usuario WHERE idUsuario = ?', [userId]);
       
@@ -356,20 +362,24 @@ app.post('/delete-account', async (req, res) => {
   }
 });
 
+// Ruta para obtener los artículos de un usuario específico
 app.get('/mis-articulos', async (req, res) => {
   try {
-    const idUsuario = req.session.userId; // ejemplo, ajusta según tu lógica de autenticación
+    const idUsuario = req.session.userId;
     const connection = await getDbConnection();
     
     const [articulos] = await connection.query('SELECT * FROM ArticuloNoticia WHERE idUsuario = ?', [idUsuario]);
 
+    // Devuelve los artículos en formato JSON
     res.json(articulos);
+
   } catch (error) {
     console.error('Error al obtener artículos:', error);
     res.status(500).send('Ocurrió un error al obtener los artículos');
   }
 });
 
+// API para recuperar el nombre de un usuario, utilizado en la barra de navegación
 app.get('/api/recuperarNombre', async (req, res) => {
   const connection = await getDbConnection();
   const idUsuario = req.session.userId;
@@ -381,32 +391,29 @@ app.get('/api/recuperarNombre', async (req, res) => {
   }
 });
 
+// POST para solicitar la búsqueda de noticias
 app.post('/encontrar-noticias', async (req, res) => {
   const { lugar, palabrasClave, fecha } = req.body;
   const consulta =`${lugar}, ${palabrasClave}`;
 
-
   try {
       const resultados = await buscarNoticias(consulta);
-      //res.json(resultados);
       req.session.resultadosNoticias = resultados;
       res.redirect('/articulos-encontrados');
+
   } catch (error) {
       console.error('Error al ejecutar script de Python: ', error);
       res.status(500).send('Error al procesar la solicitud');
   }
 });
 
-// Middlewares para parsear el cuerpo de las solicitudes
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
+// POST para generar un artículo a partir de las noticias seleccionadas
 app.post('/generar-noticias', async (req, res) => {
   const { noticiasSeleccionadas } = req.body;
   try {
-      console.log('Consultas recibidas: ', noticiasSeleccionadas);
+      //console.log('Consultas recibidas: ', noticiasSeleccionadas);
       const articulo = await generarArticulo(JSON.stringify(noticiasSeleccionadas));
-      req.session.articuloGenerado = articulo; // Suponiendo que esto guarda el artículo correctamente
+      req.session.articuloGenerado = articulo; 
       res.json({success: true, redirectUrl: '/articulo-generado'});
   } catch (error) {
       console.error('Error al ejecutar script de Python: ', error);
@@ -414,12 +421,10 @@ app.post('/generar-noticias', async (req, res) => {
   }
 });
 
-
-const { spawn } = require('child_process');
-
+// Función para enviar consulta de buscar noticias a recuperaciónNoticias.py
 function buscarNoticias(consulta) {
     return new Promise((resolve, reject) => {
-        console.log('Enviando consulta a Python:', consulta);
+        //console.log('Enviando consulta a Python:', consulta);
         const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
         let resultados = '';
 
@@ -441,12 +446,12 @@ function buscarNoticias(consulta) {
     });
 }
 
+// Función para enviar consulta de generación de artículo a generacionArticulo.py
 function generarArticulo(consulta) {
   return new Promise((resolve, reject) => {
       console.log('Enviando consulta a Python:', consulta);
       const procesoPython = spawn('python', ['generacionArticulo.py']);
 
-      // Envía los datos a través de stdin
       procesoPython.stdin.write(consulta);
       procesoPython.stdin.end();
 
@@ -472,6 +477,7 @@ function generarArticulo(consulta) {
   });
 }
 
+// API para guardar un artículo en la base de datos
 app.post('/api/guardarArticulo', async (req, res) => {
   const connection = await getDbConnection();
     try {
@@ -481,7 +487,6 @@ app.post('/api/guardarArticulo', async (req, res) => {
       const valores = [userId, dataTitulo, dataContenido, dataFecha];
       await connection.execute(sql, valores);
 
-      // Envía una respuesta exitosa
       res.json({ success: true, message: "Artículo guardado correctamente" });
 } catch (error) {
       console.error('Error al guardar el artículo en la base de datos: ', error);
@@ -489,9 +494,9 @@ app.post('/api/guardarArticulo', async (req, res) => {
 }
 });
 
+// API para obtener un artículo generado
 app.get('/api/articulo-generado', (req, res) => {
   if (req.session.articuloGenerado) {
-    // Asegúrate de devolver una respuesta en formato JSON
     res.json({ articulo: req.session.articuloGenerado });
   } else {
     res.status(404).json({ error: 'No se encontró el artículo generado' });
@@ -538,13 +543,14 @@ app.delete('/eliminarArticulo/:idArticulo', async (req, res) => {
   }
 });
 
-
-app.get('/reset-password-form', async (req, res) => {
-  res.sendFile(__dirname + '/nueva-contrasena.html');
-});
-
+// API para obtener los resultados de la búsqueda de noticias
 app.get('/api/resultados-noticias', (req, res) => {
   res.json(req.session.resultadosNoticias || []);
+});
+
+// Ruta para formulario de recuperar contraseña
+app.get('/reset-password-form', async (req, res) => {
+  res.sendFile(__dirname + '/nueva-contrasena.html');
 });
 
 // Ruta de inicio de sesión
