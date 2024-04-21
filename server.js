@@ -341,8 +341,8 @@ app.post('/delete-account', async (req, res) => {
       }
 
       // Elimina los registros relacionados con el usuario
+      await connection.execute('DELETE FROM CalificacionNoticia WHERE idUsuario = ?', [userId])
       await connection.execute('DELETE FROM ArticuloNoticia WHERE idUsuario = ?', [userId]);
-      //await connection.execute('DELETE FROM Calificacion WHERE idUsuario = ?', [userId]);
 
       // Elimina la cuenta del usuario
       await connection.execute('DELETE FROM Usuario WHERE idUsuario = ?', [userId]);
@@ -486,9 +486,17 @@ app.post('/api/guardarArticulo', async (req, res) => {
       const { dataContenido, dataTitulo, dataFecha } = req.body; 
       const sql = `INSERT INTO ArticuloNoticia (idUsuario, titulo, contenido, fecha) VALUES (?, ?, ?, ?)`;
       const valores = [userId, dataTitulo, dataContenido, dataFecha];
-      await connection.execute(sql, valores);
 
-      res.json({ success: true, message: "Artículo guardado correctamente" });
+      // Ejecutar consulta y recuperar el ID insertado
+      const [result] = await connection.execute(sql, valores);
+      const idArticulo = result.insertId; // Recuperar el ID del artículo insertado
+
+      // Insertar calificaciones iniciales para el artículo
+      const sql2 = `INSERT INTO CalificacionNoticia (idArticulo, idUsuario, calificacionTitulo, calificacionContenido, calificacionRedaccion) VALUES (?, ?, ?, ?, ?)`;
+      const valores2 = [idArticulo, userId, 0, 0, 0];
+      await connection.execute(sql2, valores2);
+      res.json({ success: true, message: 'Artículo guardado correctamente' });
+
 } catch (error) {
       console.error('Error al guardar el artículo en la base de datos: ', error);
       res.status(500).json({ success: false, message: "Error al guardar el artículo en la base de datos", error: error.message });
@@ -531,9 +539,14 @@ app.delete('/eliminarArticulo/:idArticulo', async (req, res) => {
   const { idArticulo } = req.params;
 
   try {
-    const [result] = await connection.query('DELETE FROM ArticuloNoticia WHERE idArticulo = ?', [idArticulo]);
+    const [result1] = await connection.query('DELETE FROM CalificacionNoticia WHERE idArticulo = ?', [idArticulo]);
+    const [result2] = await connection.query('DELETE FROM ArticuloNoticia WHERE idArticulo = ?', [idArticulo]);
     
-    if (result.affectedRows === 0) {
+    if (result1.affectedRows === 0) {
+      return res.status(404).json({ message: 'Calificaciones no encontradas o ya fueron eliminadas' });
+    }
+
+    if (result2.affectedRows === 0) {
       return res.status(404).json({ message: 'Artículo no encontrado o ya fue eliminado' });
     }
 
@@ -542,6 +555,36 @@ app.delete('/eliminarArticulo/:idArticulo', async (req, res) => {
     console.error('Error al eliminar el artículo:', error);
     res.status(500).json({ message: 'Error al eliminar el artículo' });
   }
+});
+
+// Ruta para obtener las calificaciones de un artículo
+app.get('/calificaciones/:idArticulo', async (req, res) => {
+  const connection = await getDbConnection();
+  const idArticulo = req.params.idArticulo;
+
+  try {
+    const rows = await connection.query('SELECT calificacionTitulo, calificacionContenido, calificacionRedaccion FROM CalificacionNoticia WHERE idArticulo = ?', [idArticulo]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener las calificaciones:', error);
+    res.status(500).send('Error al obtener las calificaciones');
+  }
+  });
+
+// Ruta para actualizar las calificaciones de un artículo
+app.put('/calificaciones/:idArticulo', async (req, res) => {
+  const connection = await getDbConnection();
+  const idArticulo = req.params.idArticulo;
+  const { calificacionTitulo, calificacionContenido, calificacionRedaccion } = req.body;
+
+  try {
+    const [result] = await connection.query('UPDATE CalificacionNoticia SET calificacionTitulo = ?, calificacionContenido = ?, calificacionRedaccion = ? WHERE idArticulo = ?', [calificacionTitulo, calificacionContenido, calificacionRedaccion, idArticulo]);
+    res.json({ message: 'Calificaciones actualizadas correctamente' });
+  }
+  catch (error) {
+    console.error('Error al actualizar las calificaciones:', error);
+    res.status(500).send('Error al actualizar las calificaciones');
+  };
 });
 
 // API para obtener los resultados de la búsqueda de noticias
@@ -629,3 +672,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+

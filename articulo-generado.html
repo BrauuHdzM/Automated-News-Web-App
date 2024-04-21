@@ -59,11 +59,18 @@
                 </div>
             </div>
         </div>
-        <div>
-            <div class="col col-md-3 col-xl-6 text-center mx-auto">
-                <a href="/calificacion" class="btn btn-secondary text-center d-block w-100" style="position: relative;display: block;overflow: clip;">Calificar artículo</a>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col col-md-3 col-xl-6 text-center">
+                    <button id="calificarArticulo" class="btn btn-secondary text-center d-block w-100" style="position: relative; display: block; overflow: clip;">Calificar artículo</a>
+                </div>
             </div>
-        </div>
+            <div class="row justify-content-center mt-3">
+                <div class="col col-md-3 col-xl-6 text-center">
+                    <button id="eliminarArticulo" class="btn btn-danger text-center">Eliminar artículo</button>
+                </div>
+            </div>
+        </div>  
     </section>
     <footer>
     <div class="container py-4 py-lg-5">
@@ -121,6 +128,148 @@
                         console.error('Error:', error);
                     });
         };
+        </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnEliminar = document.getElementById('eliminarArticulo');
+        btnEliminar.addEventListener('click', function() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡No podrás revertir esta acción!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const idArticulo = localStorage.getItem('idArticuloActual');
+                    fetch(`/eliminarArticulo/${idArticulo}`, {
+                        method: 'DELETE' 
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Falló la eliminación del artículo');
+                        }
+                        return response.json();
+                    })
+                    .then(() => {
+                        Swal.fire({
+                            title: '¡Eliminado!',
+                            text: 'El artículo ha sido eliminado.',
+                            icon: 'success',
+                            confirmButtonText: 'Entendido',
+                        }).then((result) => {
+                            if (result.isConfirmed){
+                                window.location.href = '/articulos';
+                            }
+                            else {
+                                window.location.href = '/articulos';
+                            }
+                    });
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error',
+                            'No se pudo eliminar el artículo.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        });
+    });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnCalificar = document.getElementById('calificarArticulo');
+            btnCalificar.addEventListener('click', function() {
+                const idArticulo = localStorage.getItem('idArticuloActual');
+            fetch(`/calificaciones/${idArticulo}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length) {
+                    const calificaciones = data[0];
+                    const ratingHTML = generateRatingHTML(calificaciones);
+                    Swal.fire({
+                        title: 'Califica los aspectos del artículo',
+                        html: ratingHTML,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Enviar calificaciones',
+                        cancelButtonText: 'Cancelar',
+                        didOpen: () => {
+                            document.querySelectorAll('.swal2-html-container .star-rating li').forEach(star => {
+                                star.addEventListener('click', function() {
+                                    let allStars = this.parentNode.querySelectorAll('li');
+                                    let index = Array.from(allStars).indexOf(this);
+                                    allStars.forEach((s, idx) => {
+                                        if (idx <= index) {
+                                            s.classList.add('checked');
+                                        } else {
+                                            s.classList.remove('checked');
+                                        }
+                                    });
+                                });
+                            });
+                        },
+                        preConfirm: () => {
+                            const ratings = {};
+                            document.querySelectorAll('.swal2-html-container .star-rating').forEach((ul, index) => {
+                                const aspect = ul.dataset.aspecto;
+                                const checkedStars = ul.querySelectorAll('.checked').length;
+                                ratings[aspect] = checkedStars;
+                            });
+                            return fetch(`/calificaciones/${idArticulo}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(ratings)
+                            }).then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to update ratings');
+                                }
+                                return response.json();
+                            });
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            console.log('Calificaciones actualizadas:', result.value);
+                            Swal.fire('Guardado', 'Las calificaciones han sido actualizadas.', 'success');
+                        }
+                    });
+                }
+            });
+        });
+
+        function generateRatingHTML(calificaciones) {
+        let html = '';
+        const aspects = [
+            { label: 'Título', key: 'calificacionTitulo' },
+            { label: 'Contenido', key: 'calificacionContenido' },
+            { label: 'Redacción', key: 'calificacionRedaccion' }
+        ];
+
+        aspects.forEach(aspect => {
+            const rating = calificaciones[0][aspect.key];
+            console.log(`${aspect.label} rating: ${rating}`); // Esto debería mostrarte los valores correctos ahora
+            html += `<div><label>${aspect.label}:</label><ul class="star-rating" data-aspecto="${aspect.key}" style="padding: 0;">`;
+            for (let i = 1; i <= 5; i++) {
+                html += `<li style="display: inline; cursor: pointer;" class="${i <= rating ? 'checked' : ''}">★</li>`;
+            }
+            html += '</ul></div>';
+        });
+        return html;
+    }
+
+        });
         </script>
         
 </body>

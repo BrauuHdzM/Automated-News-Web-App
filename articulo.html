@@ -11,6 +11,20 @@
     <link rel="stylesheet" href="/css/Toggle-Switch-toggle-switch.css">
     <link rel="stylesheet" href="/css/Toggle-Switch.css">
     <link rel="stylesheet" href="/css/User-Rating-F19690.css">
+
+    <style>
+        .star-rating li {
+            display: inline;
+            cursor: pointer;
+            color: gray; /* Color por defecto de las estrellas */
+            font-size: 24px; /* Ajusta el tamaño de las estrellas según necesites */
+        }
+        .star-rating li.checked {
+            color: gold; /* Cambia el color a dorado cuando una estrella está seleccionada */
+        }
+    </style>
+    
+    
 </head>
 
 <body>
@@ -62,7 +76,7 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col col-md-3 col-xl-6 text-center">
-                    <a href="/calificacion" class="btn btn-secondary text-center d-block w-100" style="position: relative; display: block; overflow: clip;">Calificar artículo</a>
+                    <button id="calificarArticulo" class="btn btn-secondary text-center d-block w-100" style="position: relative; display: block; overflow: clip;">Calificar artículo</a>
                 </div>
             </div>
             <div class="row justify-content-center mt-3">
@@ -90,7 +104,9 @@
             </ul>
         </div>
     </div>
+
     </footer>
+
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -165,8 +181,94 @@
         });
     });
     </script>
-        
-        
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCalificar = document.getElementById('calificarArticulo');
+        btnCalificar.addEventListener('click', function() {
+            const idArticulo = localStorage.getItem('idArticuloActual');
+        fetch(`/calificaciones/${idArticulo}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length) {
+                const calificaciones = data[0];
+                const ratingHTML = generateRatingHTML(calificaciones);
+                Swal.fire({
+                    title: 'Califica los aspectos del artículo',
+                    html: ratingHTML,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Enviar calificaciones',
+                    cancelButtonText: 'Cancelar',
+                    didOpen: () => {
+                        document.querySelectorAll('.swal2-html-container .star-rating li').forEach(star => {
+                            star.addEventListener('click', function() {
+                                let allStars = this.parentNode.querySelectorAll('li');
+                                let index = Array.from(allStars).indexOf(this);
+                                allStars.forEach((s, idx) => {
+                                    if (idx <= index) {
+                                        s.classList.add('checked');
+                                    } else {
+                                        s.classList.remove('checked');
+                                    }
+                                });
+                            });
+                        });
+                    },
+                    preConfirm: () => {
+                        const ratings = {};
+                        document.querySelectorAll('.swal2-html-container .star-rating').forEach((ul, index) => {
+                            const aspect = ul.dataset.aspecto;
+                            const checkedStars = ul.querySelectorAll('.checked').length;
+                            ratings[aspect] = checkedStars;
+                        });
+                        return fetch(`/calificaciones/${idArticulo}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(ratings)
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to update ratings');
+                            }
+                            return response.json();
+                        });
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        console.log('Calificaciones actualizadas:', result.value);
+                        Swal.fire('Guardado', 'Las calificaciones han sido actualizadas.', 'success');
+                    }
+                });
+            }
+        });
+    });
+
+    function generateRatingHTML(calificaciones) {
+    let html = '';
+    const aspects = [
+        { label: 'Título', key: 'calificacionTitulo' },
+        { label: 'Contenido', key: 'calificacionContenido' },
+        { label: 'Redacción', key: 'calificacionRedaccion' }
+    ];
+
+    aspects.forEach(aspect => {
+        const rating = calificaciones[0][aspect.key];
+        console.log(`${aspect.label} rating: ${rating}`); // Esto debería mostrarte los valores correctos ahora
+        html += `<div><label>${aspect.label}:</label><ul class="star-rating" data-aspecto="${aspect.key}" style="padding: 0;">`;
+        for (let i = 1; i <= 5; i++) {
+            html += `<li style="display: inline; cursor: pointer;" class="${i <= rating ? 'checked' : ''}">★</li>`;
+        }
+        html += '</ul></div>';
+    });
+    return html;
+}
+
+    });
+    </script>
         
 </body>
 
