@@ -93,6 +93,7 @@
     </footer>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         window.onload = function() {
@@ -121,7 +122,15 @@
                         }
                         return response.json();
                     })
-                    .then(saveResponse => console.log('Artículo guardado con éxito:', saveResponse))
+                    .then(saveResponse => {
+                        if(saveResponse && saveResponse.idarticulo) {
+                        localStorage.setItem('idArticuloActual', saveResponse.idarticulo);
+                        console.log('Artículo guardado con éxito:', saveResponse);
+                        } else {
+                        console.log('Error: La respuesta no contiene idarticulo');
+                        }
+                    })
+
                     .catch(error => console.error('Error:', error));
                     })
                     .catch(error => {

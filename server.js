@@ -495,7 +495,7 @@ app.post('/api/guardarArticulo', async (req, res) => {
       const sql2 = `INSERT INTO CalificacionNoticia (idArticulo, idUsuario, calificacionTitulo, calificacionContenido, calificacionRedaccion) VALUES (?, ?, ?, ?, ?)`;
       const valores2 = [idArticulo, userId, 0, 0, 0];
       await connection.execute(sql2, valores2);
-      res.json({ success: true, message: 'Artículo guardado correctamente' });
+      res.json({ success: true, message: 'Artículo guardado correctamente', idarticulo: idArticulo});
 
 } catch (error) {
       console.error('Error al guardar el artículo en la base de datos: ', error);
