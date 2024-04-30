@@ -256,7 +256,7 @@
 
     aspects.forEach(aspect => {
         const rating = calificaciones[0][aspect.key];
-        console.log(`${aspect.label} rating: ${rating}`); // Esto debería mostrarte los valores correctos ahora
+        console.log(`${aspect.label} rating: ${rating}`); 
         html += `<div><label>${aspect.label}:</label><ul class="star-rating" data-aspecto="${aspect.key}" style="padding: 0;">`;
         for (let i = 1; i <= 5; i++) {
             html += `<li style="display: inline; cursor: pointer;" class="${i <= rating ? 'checked' : ''}">★</li>`;

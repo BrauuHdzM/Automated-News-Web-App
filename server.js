@@ -243,25 +243,27 @@ app.post('/login', async (req, res) => {
   try {
       const [rows] = await connection.execute('SELECT idUsuario, contraseña, verificado, esAdmin FROM Usuario WHERE usuario = ?', [usuario]);
       if (rows.length > 0) {
-          // Comprobar si la cuenta está verificada
           const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
           if (validPassword) {
-            if (rows[0].verificado == '1') {
-              if (rows[0].esAdmin == '0') {
-                req.session.userId = rows[0].idUsuario;
-                res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: false});
+              // Comprobar si la cuenta está verificada
+              if (rows[0].verificado == '1') {
+                  if (rows[0].esAdmin == '0') {
+                    req.session.userId = rows[0].idUsuario;
+                    res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: false});
+                  }
+                  else {
+                    req.session.userId = rows[0].idUsuario;
+                    res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: true});
+                  } 
               }
-              else {
-                req.session.userId = rows[0].idUsuario;
-                res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: true});
-              } 
-            }
-            else {
-              res.json({ success: false, message: 'Cuenta no verificada. Por favor, verifica tu correo electrónico.' });
-            }
+                else {
+                  res.json({ success: false, message: 'Cuenta no verificada. Por favor, verifica tu correo electrónico.' });
+              }
+          } else {
+              res.json({ success: false, message: 'Contraseña incorrecta' });
           }
       } else {
-          res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
+          res.json({ success: false, message: 'Usuario no encontrado' });
       }
   } catch (error) {
       console.error('Error al intentar iniciar sesión: ', error);
@@ -590,6 +592,30 @@ app.put('/calificaciones/:idArticulo', async (req, res) => {
     console.error('Error al actualizar las calificaciones:', error);
     res.status(500).send('Error al actualizar las calificaciones');
   };
+});
+
+// API para obtener estadísticas de los artículos
+app.get('/api/estadisticas', async (req, res) => {
+  const connection = await getDbConnection();
+  try {
+    const [rows0] = await connection.query('SELECT COUNT(*) AS totalUsuarios FROM Usuario');
+    const [rows1] = await connection.query('SELECT COUNT(*) AS totalArticulos FROM ArticuloNoticia');
+    const [rows2] = await connection.query('SELECT COUNT(*) AS totalCalificaciones FROM CalificacionNoticia');
+    const [rows3] = await connection.query('SELECT AVG(calificacion_total) AS promedioCalificacionGral FROM (SELECT (calificacionTitulo + calificacionContenido + calificacionRedaccion) / 3 AS calificacion_total FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0) AS calificaciones_filtradas;')
+    const [rows4] = await connection.query('SELECT AVG(calificacionTitulo) AS promedioCalificacionTitulo, AVG(calificacionContenido) AS promedioCalificacionContenido, AVG(calificacionRedaccion) AS promedioCalificacionRedaccion FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0;')
+    const [rows5] = await connection.query('SELECT titulo, fecha FROM articulonoticia ORDER BY idArticulo DESC LIMIT 3;')
+    res.json({ totalUsuarios: rows0[0].totalUsuarios, 
+               totalArticulos: rows1[0].totalArticulos, 
+               totalCalificaciones: rows2[0].totalCalificaciones,
+               promedioCalificacionGral: rows3[0].promedioCalificacionGral,
+               promedioCalificacionTitulo: rows4[0].promedioCalificacionTitulo,
+               promedioCalificacionContenido: rows4[0].promedioCalificacionContenido,
+               promedioCalificacionRedaccion: rows4[0].promedioCalificacionRedaccion,
+               ultimosArticulos: rows5});
+  } catch (error) {
+    console.error('Error al obtener las estadísticas:', error);
+    res.status(500).send('Error al obtener las estadísticas');
+  }
 });
 
 // API para obtener los resultados de la búsqueda de noticias
