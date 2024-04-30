@@ -106,8 +106,8 @@ app.post('/register', async (req, res) => {
   
       // Guardar usuario en la base de datos con estado "no verificado" y el código de verificación
       await connection.execute(
-        'INSERT INTO Usuario (nombre, usuario, correo, contraseña, codigoVerificacion, verificado) VALUES (?, ?, ?, ?, ?, ?)',
-        [nombre, usuario, email, hashedPassword, verificationCode, 0]
+        'INSERT INTO Usuario (nombre, usuario, correo, contraseña, codigoVerificacion, verificado, esAdmin) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [nombre, usuario, email, hashedPassword, verificationCode, 0, 0]
       );
   
       // Enviar correo con código de verificación
@@ -241,19 +241,24 @@ app.post('/login', async (req, res) => {
   const { usuario, contrasena } = req.body;
   const connection = await getDbConnection();
   try {
-      const [rows] = await connection.execute('SELECT idUsuario, contraseña, verificado FROM Usuario WHERE usuario = ?', [usuario]);
+      const [rows] = await connection.execute('SELECT idUsuario, contraseña, verificado, esAdmin FROM Usuario WHERE usuario = ?', [usuario]);
       if (rows.length > 0) {
           // Comprobar si la cuenta está verificada
-          if (rows[0].verificado != 1) {
-              return res.json({ success: false, message: 'La cuenta no está verificada. Por favor, verifica tu cuenta antes de intentar iniciar sesión.' });
-          }
           const validPassword = await bcrypt.compare(contrasena, rows[0].contraseña);
           if (validPassword) {
-              // Establecer la sesión del usuario
-              req.session.userId = rows[0].idUsuario;
-              res.json({ success: true, message: `Bienvenid@ ${usuario}` });
-          } else {
-              res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
+            if (rows[0].verificado == '1') {
+              if (rows[0].esAdmin == '0') {
+                req.session.userId = rows[0].idUsuario;
+                res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: false});
+              }
+              else {
+                req.session.userId = rows[0].idUsuario;
+                res.json({ success: true, message: `Bienvenid@ ${usuario}`, isAdmin: true});
+              } 
+            }
+            else {
+              res.json({ success: false, message: 'Cuenta no verificada. Por favor, verifica tu correo electrónico.' });
+            }
           }
       } else {
           res.json({ success: false, message: 'Usuario y/o contraseña incorrecta.' });
@@ -650,6 +655,11 @@ app.get('/eliminar-cuenta', isAuthenticated, async (req, res) => {
 // Ruta para calificacion
 app.get('/calificacion', isAuthenticated, async (req, res) => {
     res.sendFile(__dirname + '/calificacion.html');
+});
+
+// Ruta para administrador
+app.get('/admin', isAuthenticated, async (req, res) => {
+    res.sendFile(__dirname + '/administrador.html');
 });
 
 // Ruta GET para servir la página de registro

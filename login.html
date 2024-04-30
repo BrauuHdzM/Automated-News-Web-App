@@ -89,6 +89,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    console.log(data.isAdmin)
                     Swal.fire({
                         title: '¡Bienvenid@!',
                         text: `Bienvenid@ ${formData.get('usuario')}`,
@@ -96,13 +97,18 @@
                         confirmButtonText: 'Continuar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = '/articulos'; // Redirecciona a la página de artículos
+                            if (data.isAdmin == true) {
+                                window.location.href = '/admin'; // Redirecciona a la página de administrador
+                            }
+                            else {
+                                window.location.href = '/articulos'; // Redirecciona a la página de artículos
+                            }
                         }
                     });
                 } else {
                     Swal.fire({
                         title: 'Error',
-                        text: 'Usuario y/o contraseña incorrecta.',
+                        text: data.message,
                         icon: 'error',
                         confirmButtonText: 'Intentar de nuevo'
                     });
