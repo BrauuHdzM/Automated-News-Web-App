@@ -5,10 +5,7 @@ import os
 from openai import OpenAI
 from decouple import config
 from datetime import datetime
-
-client = OpenAI(
-  api_key=config('OPENAI_API_KEY'), 
-)
+import google.generativeai as genai
 
 def convertir_fecha_gmt_a_espanol(fecha_original):
     try:
@@ -44,7 +41,9 @@ def convertir_fecha_gmt_a_espanol(fecha_original):
         # Manejar el error si el mes no se encuentra en el diccionario
         return f"Error en el diccionario de meses: {e}"
     
-def generar_nueva_noticia(noticias):
+def generar_nueva_noticia_gpt_noticias(noticias):
+    client = OpenAI(api_key=config('OPENAI_API_KEY'), )
+
     # Extrae el 'cuerpo' de cada noticia en la lista
     cuerpos_noticias = [noticia['cuerpo'] for noticia in noticias]
     
@@ -74,8 +73,97 @@ def generar_nueva_noticia(noticias):
 
         print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
         return ""
+
+def generar_nueva_noticia_gpt_base(noticias):
+    client = OpenAI(api_key=config('OPENAI_API_KEY'), )
+
+    # Extrae el 'cuerpo' de cada noticia en la lista
+    cuerpos_noticias = [noticia['cuerpo'] for noticia in noticias]
+    
+    # Concatena los cuerpos de las noticias en un solo texto para usarlo como prompt
+    texto_noticias = ' '.join(cuerpos_noticias)
+    
+    fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+    lugar = noticias[0]['lugar']
+
+    # Define un prompt para la generación de texto basado en las noticias procesadas
+    prompt = f"Crea un artículo de noticias con esta información: {texto_noticias}. Fecha: {fecha}. Lugar: {lugar}."
+    
+    # Realiza la llamada a la API de OpenAI para generar la nueva noticia
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
+                {"role": "user", "content": f"{prompt}"}
+            ]
+            )
+        
+        nueva_noticia = completion.choices[0].message.content
+        return nueva_noticia
+    
+    except Exception as e:
+
+        print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
+        return ""
+
+def generar_nueva_noticia_gemini(noticias):
+    genai.configure(api_key=config('GOOGLE_API_KEY'))
+
+    safety_settings = [
+    {
+        "category": "HARM_CATEGORY_DANGEROUS",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_NONE",
+    },
+    ]
+    
+    # Extrae el 'cuerpo' de cada noticia en la lista
+    cuerpos_noticias = [noticia['cuerpo'] for noticia in noticias]
+    
+    # Concatena los cuerpos de las noticias en un solo texto para usarlo como prompt
+    texto_noticias = ' '.join(cuerpos_noticias)
+    
+    fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+    lugar = noticias[0]['lugar']
+
+    context = "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."
+
+    # Define un prompt para la generación de texto basado en las noticias procesadas
+    prompt = f"{context} Crea un artículo de noticias con esta información: {texto_noticias}. Fecha: {fecha}. Lugar: {lugar}."
+    
+    model = genai.GenerativeModel(model_name="gemini-pro",
+                              safety_settings=safety_settings)
+    
+    # Realiza la llamada a la API de OpenAI para generar la nueva noticia
+    try:
+        response = model.generate_content(prompt)
+        nueva_noticia = response.text
+
+        return nueva_noticia
+    
+    except Exception as e:
+
+        print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
+        return ""
     
 def generar_nuevo_titulo(nueva_noticia):
+        client = OpenAI(api_key=config('OPENAI_API_KEY'), )
         prompt = f"Genera un título adecuado para esta noticia: {nueva_noticia}"
 
         try:
@@ -101,10 +189,17 @@ if __name__ == "__main__":
     try:
         entrada_json = sys.stdin.read()
         noticias = json.loads(entrada_json)
-        
-        # Aquí podrías procesar las noticias individualmente si es necesario
-        # Por simplicidad, se asume que 'noticias' es una lista de textos de noticias
-        nueva_noticia = generar_nueva_noticia(noticias)
+
+        modelo = noticias[0]['modelo']
+
+        if modelo == "GPT-3.5-Base":
+            nueva_noticia = generar_nueva_noticia_gpt_base(noticias)
+        elif modelo == "GPT-3.5-News":
+            nueva_noticia = generar_nueva_noticia_gpt_noticias(noticias)
+        elif modelo == "Gemini":
+            nueva_noticia = generar_nueva_noticia_gemini(noticias)
+        else:
+            nueva_noticia = ""
 
         nuevo_titulo = generar_nuevo_titulo(nueva_noticia)
 

@@ -30,15 +30,47 @@
             </nav>
         </div>
     </nav>
+    
     <section class="py-5 my-5">
         <div class="container py-5">
             <div class="row mb-2">
-                <div class="col-md-8 col-xl-6 text-center mx-auto">
-                    <h2 class="display-6 fw-bold mb-5"><span class="pb-3 underline">Artículos encontrados</span></h2>
-                    <p class="text-muted mb-3">Selecciona que información agregar para complementar la creación de tu artículo de noticias</p>
-                </div>                
+            
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-xl-12 text-center mx-auto">
+                        <h2 class="display-6 fw-bold mb-5"><span class="pb-3 underline">Artículos encontrados</span></h2>
+                    </div>
+            
+                    <div class="w-20 my-2"></div>
+            
+                    <div class="col-md-10 col-xl-12 text-center mx-auto mb-5">
+                        <h4 class="fw-bold mb-3" style="font-size: 1.2rem;">1. Escoge un modelo de lenguaje</h4>
+                        <div class="d-flex justify-content-center mb-3">
+                            <!-- Gemini Model Switch -->
+                            <div class="form-check form-switch mx-2">
+                                <input class="form-check-input" type="radio" name="modelSelection" id="geminiModel" value="Gemini" checked>
+                                <label class="form-check-label" for="geminiModel">Gemini</label>
+                            </div>
+                            <!-- GPT 3.5 Base Model Switch -->
+                            <div class="form-check form-switch mx-2">
+                                <input class="form-check-input" type="radio" name="modelSelection" id="gpt35BaseModel" value="GPT-3.5-Base">
+                                <label class="form-check-label" for="gpt35BaseModel">GPT 3.5 Base</label>
+                            </div>
+                            <!-- GPT 3.5 News Model Switch -->
+                            <div class="form-check form-switch mx-2">
+                                <input class="form-check-input" type="radio" name="modelSelection" id="gpt35NewsModel" value="GPT-3.5-News">
+                                <label class="form-check-label" for="gpt35NewsModel">GPT 3.5 para noticias</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+            
+                    <div class="col-md-10 col-xl-12 text-center mx-auto">
+                        <h4 class="fw-bold mb-3" style="font-size: 1.2rem;">2. Selecciona qué información agregar para complementar la creación de tu artículo de noticias</p>
+                    </div>
+                </div>
+
             </div>
-            <section id="resultados" class="py-5 my-5">
+            <section id="resultados" class="pt-2 mt-2">
             </section>
                         <div class="mb-3"></div>
                         <div class="card-body">
@@ -105,11 +137,10 @@
                                                         <p class="card-place">${noticia[6]}</p> <!-- Cuerpo de la noticia -->
                                                         <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
                                                         <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
-                                                        <div class="form-check">
+                                                        <div class="form-check form-switch mt-3 mb-3"> <!-- Añadido margen superior e inferior -->
                                                             <input class="form-check-input" type="checkbox" value="${noticia[5]}" id="includeNewsCheck${noticia[5]}">
-                                                                <label class="form-check-label" for="includeNewsCheck${noticia[5]}">
-                                                                    Incluir Noticia
-                                                                </label>
+                                                            <label class="form-check-label" for="includeNewsCheck${noticia[5]}">
+                                                                Incluir Noticia
                                                             </label>
                                                         </div>
                                                     </div>
@@ -129,56 +160,61 @@
 
                 document.getElementById('botonGenerar').addEventListener('click', function() {
                     Swal.fire({
-                    title: 'Generando artículo...',
-                    text: 'Por favor, espera un momento.',
-                    icon: 'info',
-                    showConfirmButton: false,
-                    allowOutsideClick: false,
-                    willOpen: () => {
-                        Swal.showLoading()
-                    }
-                });
-                    const checkboxes = document.querySelectorAll('.form-check-input:checked');
-                    const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
-                        const cardBody = checkbox.closest('.card-body');
-                        return {
-                            id: checkbox.value,
-                            titulo: escapeJSONString(cardBody.querySelector('.card-title').textContent),
-                            fecha: cardBody.querySelector('.card-date').textContent,
-                            medio: cardBody.querySelector('.card-source').textContent,
-                            cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
-                            lugar: cardBody.querySelector('.card-place').textContent,
-                        };
-                    });
-
-                    fetch('/generar-noticias', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ noticiasSeleccionadas }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data.success && data.redirectUrl) {
-                            window.location.href = data.redirectUrl;
-                        } else {
-                            console.error(data.message || 'Error desconocido');
+                        title: 'Generando artículo...',
+                        text: 'Por favor, espera un momento.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
-                    })
-                    .catch((error) => {
-                        console.error('Error:', error);
                     });
-                                
-                    function escapeJSONString(str) {
-                        return str
-                            .replace(/"/g, '\\"') // Escapa comillas dobles regulares.
-                            .replace(/“/g, '\\"') // Escapa comillas inteligentes de apertura.
-                            .replace(/”/g, '\\"'); // Escapa comillas inteligentes de cierre.
-                    }
+                const modelSelected = document.querySelector('input[name="modelSelection"]:checked').value;
 
-
+                const checkboxes = document.querySelectorAll('.form-check-input:checked:not([name="modelSelection"])');
+                const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
+                    const cardBody = checkbox.closest('.card-body');
+                    return {
+                        id: checkbox.value,
+                        titulo: escapeJSONString(cardBody.querySelector('.card-title').textContent),
+                        fecha: cardBody.querySelector('.card-date').textContent,
+                        medio: cardBody.querySelector('.card-source').textContent,
+                        cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
+                        lugar: cardBody.querySelector('.card-place').textContent,
+                        modelo: modelSelected,
+                    };
                 });
+
+                fetch('/generar-noticias', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ noticiasSeleccionadas}),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success && data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                        Swal.close();
+                    } else {
+                        console.error(data.message || 'Error desconocido');
+                        Swal.close();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    Swal.close();
+                });
+
+                function escapeJSONString(str) {
+                    return str
+                        .replace(/"/g, '\\"')
+                        .replace(/“/g, '\\"')
+                        .replace(/”/g, '\\"');
+                }
+            });
+
 
         };
     </script>

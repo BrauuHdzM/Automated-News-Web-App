@@ -600,7 +600,7 @@ app.get('/api/estadisticas', async (req, res) => {
   try {
     const [rows0] = await connection.query('SELECT COUNT(*) AS totalUsuarios FROM Usuario');
     const [rows1] = await connection.query('SELECT COUNT(*) AS totalArticulos FROM ArticuloNoticia');
-    const [rows2] = await connection.query('SELECT COUNT(*) AS totalCalificaciones FROM CalificacionNoticia');
+    const [rows2] = await connection.query('SELECT COUNT(*) AS totalCalificaciones FROM CalificacionNoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0');
     const [rows3] = await connection.query('SELECT AVG(calificacion_total) AS promedioCalificacionGral FROM (SELECT (calificacionTitulo + calificacionContenido + calificacionRedaccion) / 3 AS calificacion_total FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0) AS calificaciones_filtradas;')
     const [rows4] = await connection.query('SELECT AVG(calificacionTitulo) AS promedioCalificacionTitulo, AVG(calificacionContenido) AS promedioCalificacionContenido, AVG(calificacionRedaccion) AS promedioCalificacionRedaccion FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0;')
     const [rows5] = await connection.query('SELECT titulo, fecha FROM articulonoticia ORDER BY idArticulo DESC LIMIT 3;')
