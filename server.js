@@ -370,22 +370,42 @@ app.post('/delete-account', async (req, res) => {
   }
 });
 
-// Ruta para obtener los artículos de un usuario específico
+// Ruta para obtener los artículos de un usuario específico con paginación
 app.get('/mis-articulos', async (req, res) => {
   try {
     const idUsuario = req.session.userId;
-    const connection = await getDbConnection();
-    
-    const [articulos] = await connection.query('SELECT * FROM ArticuloNoticia WHERE idUsuario = ?', [idUsuario]);
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 5;
+    const offset = (page - 1) * pageSize;
 
-    // Devuelve los artículos en formato JSON
-    res.json(articulos);
+    const connection = await getDbConnection();
+
+    // Consulta para obtener los artículos con limit y offset para paginación
+    const [articulos] = await connection.query(
+      'SELECT * FROM ArticuloNoticia WHERE idUsuario = ? ORDER BY idArticulo DESC LIMIT ? OFFSET ?',
+      [idUsuario, pageSize, offset]
+    );
+
+    // Consulta para obtener el total de artículos (opcional, para manejar 'hasMore')
+    const [totalResults] = await connection.query(
+      'SELECT COUNT(*) AS total FROM ArticuloNoticia WHERE idUsuario = ?',
+      [idUsuario]
+    );
+    const total = totalResults[0].total;
+    const hasMore = (page * pageSize) < total;
+
+    // Devuelve los artículos en formato JSON con información sobre si hay más páginas
+    res.json({
+      articulos: articulos,
+      hasMore: hasMore
+    });
 
   } catch (error) {
     console.error('Error al obtener artículos:', error);
     res.status(500).send('Ocurrió un error al obtener los artículos');
   }
 });
+
 
 // API para recuperar el nombre de un usuario, utilizado en la barra de navegación
 app.get('/api/recuperarNombre', async (req, res) => {

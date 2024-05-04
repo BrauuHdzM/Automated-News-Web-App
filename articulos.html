@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/Toggle-Switch-toggle-switch.css">
     <link rel="stylesheet" href="/css/Toggle-Switch.css">
     <link rel="stylesheet" href="/css/User-Rating-F19690.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         .clickable {
@@ -21,34 +22,41 @@
 
 <body>
     <section class="py-5 my-5">
-        <nav class="navbar navbar-expand-md fixed-top bg-primary navbar-shrink py-3 navbar-dark" id="mainNav">
-            <div class="container"><a class="navbar-brand d-flex align-items-center" href=""><span>Generación de noticias</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
-                <div class="collapse navbar-collapse" id="navcol-1">
-                    <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" href="/main"></a></li>
-                        <li class="nav-item"></li>
-                        <li class="nav-item"></li>
-                        <li class="nav-item"></li>
+        
+        <nav class="navbar navbar-expand-md fixed-top bg-primary navbar-dark py-3" id="mainNav">
+            <div class="container">
+                <a class="navbar-brand" href="/main">Generación de noticias</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+                        
+                        <!-- Gestión de usuario solo visible en móviles -->
+                        <li class="nav-item d-md-none text-center"><a id="nombreUsuarioNormal" class="nav-link">Nombre: Usuario</a></li>
+                        <li class="nav-item d-md-none text-center"><a class="nav-link" href="/dato-modificar">Modificar usuario</a></li>
+                        <li class="nav-item d-md-none text-center"><a class="nav-link" href="/eliminar-cuenta">Borrar usuario</a></li>
+                        <li class="nav-item d-md-none text-center"><a class="nav-link" href="/logout">Cerrar sesión</a></li>
+        
+                        <!-- Botón dropdown visible solo en pantallas de computadora -->
+                        <div class="btn-group d-none d-md-block">
+                            <button type="button" class="btn btn-warning shadow dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                Gestión de usuario
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a id="nombreUsuario" class="dropdown-item" href="#">Nombre: Usuario</a></li>
+                                <li><a class="dropdown-item" href="/dato-modificar">Modificar usuario</a></li>
+                                <li><a class="dropdown-item" href="/eliminar-cuenta">Borrar usuario</a></li>
+                                <li><div class="dropdown-divider"></div></li>
+                                <li><a class="dropdown-item" href="/logout">Cerrar sesión</a></li>
+                            </ul>
+                        </div>
                     </ul>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-warning shadow dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Gestión de usuario
-                        </button>
-                        <ul class="dropdown-menu">
-                            <!-- Opción "Nombre" -->
-                            <li><a class="dropdown-item" id="nombreUsuario">Nombre</a></li>
-                            <!-- Opción "Modificar usuario" -->
-                            <li><a class="dropdown-item" href="/dato-modificar">Modificar usuario</a></li>
-                            <!-- Opción "Borrar usuario" -->
-                            <li><a class="dropdown-item" href="/eliminar-cuenta">Borrar usuario</a></li>
-                            <div class="dropdown-divider"></div>
-                            <!-- Opción "Cerrar sesión" -->
-                            <li><a class="dropdown-item" href="/logout">Cerrar sesión</a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </nav>
+        
+        
         <div class="container py-5">
             <div class="row mb-2">
                 <div class="col-md-8 col-xl-6 text-center mx-auto">
@@ -58,6 +66,9 @@
             </div>
             <div class="mb-3"></div>
             <div id="contenedor-articulos"></div>
+            <div class="d-flex justify-content-end mt-3">
+                <button id="load-more-btn" class="btn btn-primary btn-sm" style="display: none;">Cargar más</button>
+            </div>
             
     </section>
     <footer>
@@ -83,45 +94,71 @@
     <script src="/js/startup-modern.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-          fetch('/mis-articulos')
-            .then(response => response.json())
-            .then(articulos => {
-              const contenedorArticulos = document.getElementById('contenedor-articulos');
-              articulos.forEach(articulo => {
-                const divMargin = document.createElement('div');
-                divMargin.className = 'mb-3';
-                
-                // Modificamos la estructura del artículo para incluir un data-id
-                const articuloDiv = document.createElement('div');
-                articuloDiv.className = 'card clickable';
-                articuloDiv.innerHTML = `
-                  <div class="card-body clickable" data-id="${articulo.idArticulo}">
-                    <h4 class="card-title">${articulo.titulo}</h4>
-                    <h6 class="text-muted card-subtitle mb-2">${articulo.fecha}</h6>
-                    <!-- Más información del artículo aquí -->
-                  </div>
-                `;
-                articuloDiv.addEventListener('click', function() {
-                  const articuloId = this.querySelector('.card-body').getAttribute('data-id');
-                  fetch(`/articulo/${articuloId}`)
-                    .then(response => response.json())
-                    .then(articulo => {
-                      // Suponiendo que quieras almacenar los datos del artículo en localStorage para luego acceder a ellos en articulo.html
-                      localStorage.setItem('articuloActual', JSON.stringify(articulo));
-                      // Redirigir al usuario a articulo.html
-                      window.location.href = '/articulo';
-                    })
-                    .catch(error => console.error('Error al cargar el artículo:', error));
+          let currentPage = 1;
+          const pageSize = 5;
+    
+          function loadArticles(page) {
+            fetch(`/mis-articulos?page=${page}`)
+              .then(response => response.json())
+              .then(data => {
+                const articulos = data.articulos;
+                const contenedorArticulos = document.getElementById('contenedor-articulos');
+                if (page === 1) {
+                  contenedorArticulos.innerHTML = ''; // Limpiar contenedor solo en la primera carga
+                }
+    
+                articulos.forEach(articulo => {
+                  const divMargin = document.createElement('div');
+                  divMargin.className = 'mb-3';
+    
+                  const articuloDiv = document.createElement('div');
+                  articuloDiv.className = 'card clickable';
+                  articuloDiv.innerHTML = `
+                    <div class="card-body clickable" data-id="${articulo.idArticulo}">
+                      <h4 class="card-title">${articulo.titulo}</h4>
+                      <h6 class="text-muted card-subtitle mb-2">${articulo.fecha}</h6>
+                    </div>
+                  `;
+    
+                  articuloDiv.addEventListener('click', function() {
+                    const articuloId = this.querySelector('.card-body').getAttribute('data-id');
+                    fetch(`/articulo/${articuloId}`)
+                      .then(response => response.json())
+                      .then(articulo => {
+                        localStorage.setItem('articuloActual', JSON.stringify(articulo));
+                        window.location.href = '/articulo';
+                      })
+                      .catch(error => console.error('Error al cargar el artículo:', error));
+                  });
+    
+                  contenedorArticulos.appendChild(divMargin);
+                  contenedorArticulos.appendChild(articuloDiv);
+                  contenedorArticulos.appendChild(divMargin.cloneNode());
                 });
-        
-                contenedorArticulos.appendChild(divMargin);
-                contenedorArticulos.appendChild(articuloDiv);
-                contenedorArticulos.appendChild(divMargin.cloneNode());
-              });
-            })
-            .catch(error => console.error('Error al cargar los artículos:', error));
+    
+                // Verificar si hay más artículos para mostrar
+                if (data.hasMore) {
+                  const loadMoreBtn = document.getElementById('load-more-btn');
+                  loadMoreBtn.style.display = 'block';
+                } else {
+                  const loadMoreBtn = document.getElementById('load-more-btn');
+                  loadMoreBtn.style.display = 'none';
+                }
+              })
+              .catch(error => console.error('Error al cargar los artículos:', error));
+          }
+    
+          // Carga inicial de artículos
+          loadArticles(currentPage);
+    
+          // Manejador del evento click para el botón de cargar más
+          document.getElementById('load-more-btn').addEventListener('click', function() {
+            currentPage++;
+            loadArticles(currentPage);
+          });
         });
-        </script>
+    </script>
+    
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 fetch('/api/recuperarNombre')
@@ -129,6 +166,7 @@
                     .then(usuario => {
                         localStorage.setItem('usuario', JSON.stringify(usuario));
                         document.getElementById('nombreUsuario').innerHTML = usuario.nombre;
+                        document.getElementById('nombreUsuarioNormal').innerHTML = usuario.nombre;
                     })
                     .catch(error => console.error('Error al cargar el usuario:', error));
             });

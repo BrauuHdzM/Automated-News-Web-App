@@ -1,11 +1,7 @@
 import sys
 import json
-from openai import OpenAI
-from decouple import config
+from sentence_transformers import SentenceTransformer, util
 import feedparser
-import numpy as np
-
-client = OpenAI(api_key=config('OPENAI_API_KEY'))
 
 def obtener_noticias_desde_fuentes(fuentes):
     noticias_descripciones = []
@@ -22,18 +18,11 @@ def obtener_noticias_desde_fuentes(fuentes):
                     noticias_descripciones.append((nombre_fuente, titulo, fecha, descripcion))
     return noticias_descripciones
 
-def get_embedding(text, model="text-embedding-3-small"):
-    text = text.replace("\n", " ")
-    return client.embeddings.create(input=[text], model=model).data[0].embedding
-
-def cosine_similarity(v1, v2):
-    """Calcular la similitud del coseno entre dos vectores."""
-    v1 = np.array(v1)
-    v2 = np.array(v2)
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 def main():
     consulta = sys.argv[1]  
+
+    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
     fuentes = [
         ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
@@ -56,19 +45,13 @@ def main():
 
     lugar =  consulta.split(',', 1)[0]
 
-     # Genera embeddings para la consulta y las noticias
-    embeddings1 = client.embeddings.create(
-    input=sentences1,
-    model="text-embedding-3-small"
-    ).data[0].embedding
+    embeddings1 = model.encode(sentences1, convert_to_tensor=True)
+    embeddings2 = model.encode(sentences2, convert_to_tensor=True)
 
-    embeddings2 = [get_embedding(sentence, model="text-embedding-3-small") for sentence in sentences2]
-
-    # Calcula similitud del coseno
-    cosine_scores = [cosine_similarity(embeddings1, embedding) for embedding in embeddings2]
+    cosine_scores = util.cos_sim(embeddings1, embeddings2)
 
     results = [
-        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[i], i, lugar) 
+        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[0][i].item(), i, lugar) 
         for i in range(len(noticias))
     ]
 
