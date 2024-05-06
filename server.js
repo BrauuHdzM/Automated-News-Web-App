@@ -423,11 +423,13 @@ app.get('/api/recuperarNombre', async (req, res) => {
 app.post('/encontrar-noticias', async (req, res) => {
   const { lugar, palabrasClave, fecha } = req.body;
   const consulta =`${lugar}, ${palabrasClave}`;
+  console.log('Consulta recibida: ', consulta);
 
   try {
-      const resultados = await buscarNoticias(consulta);
+      const resultados = await buscarNoticias(JSON.stringify([{ lugar, palabrasClave, fecha }]));
       req.session.resultadosNoticias = resultados;
-      res.redirect('/articulos-encontrados');
+      console.log(resultados);
+      res.json({success: true, redirectUrl: '/articulos-encontrados'});
 
   } catch (error) {
       console.error('Error al ejecutar script de Python: ', error);
@@ -452,25 +454,30 @@ app.post('/generar-noticias', async (req, res) => {
 // Función para enviar consulta de buscar noticias a recuperaciónNoticias.py
 function buscarNoticias(consulta) {
     return new Promise((resolve, reject) => {
-        console.log('Enviando consulta a Python:', consulta);
-        const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
-        let resultados = '';
+      console.log('Enviando consulta a Python:', consulta);
+      const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
+      procesoPython.stdin.write(consulta);
+      procesoPython.stdin.end();
 
-        procesoPython.stdout.on('data', (data) => {
-            resultados += data.toString();
-        });
+      let resultados = '';
 
-        procesoPython.on('close', (code) => {
-            if (code !== 0) {
-                return reject(`El script de Python finalizó con el código ${code}`);
-            }
-            try {
-                const parsedData = JSON.parse(resultados);
-                resolve(parsedData);
-            } catch (error) {
-                reject('Error al parsear la salida del script de Python: ' + error);
-            }
-        });
+      procesoPython.stdout.on('data', (data) => {
+          resultados += data.toString();
+      });
+
+      procesoPython.on('close', (code) => {
+          if (code !== 0) {
+              console.error(`Error al ejecutar el script de Python: ${resultados}`);
+              return reject(`El script de Python finalizó con el código ${code}`);
+          } else {
+              resolve(resultados);
+
+          }
+      });
+
+      procesoPython.stderr.on('data', (data) => {
+          console.error(`stderr: ${data}`);
+      });
     });
 }
 
@@ -621,8 +628,8 @@ app.get('/api/estadisticas', async (req, res) => {
     const [rows0] = await connection.query('SELECT COUNT(*) AS totalUsuarios FROM Usuario');
     const [rows1] = await connection.query('SELECT COUNT(*) AS totalArticulos FROM ArticuloNoticia');
     const [rows2] = await connection.query('SELECT COUNT(*) AS totalCalificaciones FROM CalificacionNoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0');
-    const [rows3] = await connection.query('SELECT AVG(calificacion_total) AS promedioCalificacionGral FROM (SELECT (calificacionTitulo + calificacionContenido + calificacionRedaccion) / 3 AS calificacion_total FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0) AS calificaciones_filtradas;')
-    const [rows4] = await connection.query('SELECT AVG(calificacionTitulo) AS promedioCalificacionTitulo, AVG(calificacionContenido) AS promedioCalificacionContenido, AVG(calificacionRedaccion) AS promedioCalificacionRedaccion FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0;')
+    const [rows3] = await connection.query('SELECT ROUND(AVG(calificacion_total),2) AS promedioCalificacionGral FROM (SELECT (calificacionTitulo + calificacionContenido + calificacionRedaccion) / 3 AS calificacion_total FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0) AS calificaciones_filtradas;')
+    const [rows4] = await connection.query('SELECT ROUND(AVG(calificacionTitulo),2) AS promedioCalificacionTitulo, ROUND(AVG(calificacionContenido),2) AS promedioCalificacionContenido, ROUND(AVG(calificacionRedaccion),2) AS promedioCalificacionRedaccion FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0;')
     const [rows5] = await connection.query('SELECT titulo, fecha FROM articulonoticia ORDER BY idArticulo DESC LIMIT 3;')
     res.json({ totalUsuarios: rows0[0].totalUsuarios, 
                totalArticulos: rows1[0].totalArticulos, 

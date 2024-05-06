@@ -108,10 +108,13 @@
             fetch('/api/resultados-noticias')
                 .then(response => response.json())
                 .then(data => {
+                    let parsedResponse = JSON.parse(data);
+                    let resultados = parsedResponse.resultados;
+                    console.log(resultados)
                     const seccionResultados = document.getElementById('resultados');
                     const botonGenerar = document.getElementById('botonGenerar');
     
-                    if (data.length === 0) {
+                    if (resultados.length === 0) {
                         botonGenerar.hidden = true;
                         Swal.fire({
                             icon: 'info',
@@ -126,7 +129,7 @@
                             }
                         });
                     } else {
-                        data.forEach(noticia => {
+                        resultados.forEach(noticia => {
                             const tarjetaNoticia = document.createElement('div');
                             tarjetaNoticia.className = 'card my-3';
                             tarjetaNoticia.innerHTML = `
@@ -215,8 +218,6 @@
                         .replace(/”/g, '\\"');
                 }
             });
-
-
         };
     </script>
     

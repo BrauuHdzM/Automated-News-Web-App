@@ -153,7 +153,7 @@ def generar_nueva_noticia_gemini(noticias):
     model = genai.GenerativeModel(model_name="gemini-pro",
                               safety_settings=safety_settings)
     
-    # Realiza la llamada a la API de OpenAI para generar la nueva noticia
+    # Realiza la llamada a la API de Google para generar la nueva noticia
     try:
         response = model.generate_content(prompt)
         nueva_noticia = response.text
@@ -162,7 +162,7 @@ def generar_nueva_noticia_gemini(noticias):
     
     except Exception as e:
 
-        print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
+        print(f"Error al generar nueva noticia con Google: {e}", file=sys.stderr)
         return ""
     
 def generar_nuevo_titulo(nueva_noticia):
@@ -172,7 +172,7 @@ def generar_nuevo_titulo(nueva_noticia):
         try:
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                max_tokens=20,
+                max_tokens=60,
                 temperature=0.5,
                 messages=[
                     {"role": "system", "content": "Tu tarea es escribir un título adecuado para la noticia que se te presenta."},

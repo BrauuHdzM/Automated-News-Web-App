@@ -33,7 +33,10 @@ def cosine_similarity(v1, v2):
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 def main():
-    consulta = sys.argv[1]  
+    json_string = sys.stdin.read()           
+    consulta = json.loads(json_string)
+
+    busqueda = consulta[0]['lugar'] + " " + consulta[0]['palabrasClave']
 
     fuentes = [
         ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
@@ -51,10 +54,10 @@ def main():
 
     noticias = obtener_noticias_desde_fuentes(fuentes)
 
-    sentences1 = [consulta]  # Usa la consulta aquí
+    sentences1 = [busqueda]  # Usa la consulta aquí
     sentences2 = [noticia[1] + " " + noticia[3] for noticia in noticias]
 
-    lugar =  consulta.split(',', 1)[0]
+    lugar =  consulta[0]['lugar']
 
      # Genera embeddings para la consulta y las noticias
     embeddings1 = client.embeddings.create(
@@ -74,7 +77,7 @@ def main():
 
     filtered_results = [result for result in results if result[4] >= 0.55]
 
-    print(json.dumps(filtered_results))
+    print(json.dumps({"success": True, "resultados": filtered_results}))
 
 if __name__ == "__main__":
     main()

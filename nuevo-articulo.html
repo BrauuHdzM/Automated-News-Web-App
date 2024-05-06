@@ -43,12 +43,12 @@
             <div class="row d-flex justify-content-center">
                 <div class="col-md-6">
                     <div>
-                        <form id="noticiasForm" class="p-3 p-xl-4" action="/encontrar-noticias" method="post" data-bs-theme="light">
-                            <div class="mb-3"><input class="shadow form-control" type="text" id="name-1" name="lugar" placeholder="Lugar"></div>
-                            <div class="mb-3"><input class="shadow form-control" type="date" name="fecha" placeholder="Fecha"></div>
-                            <div class="mb-3"><textarea class="shadow form-control" id="message-1" name="palabrasClave" rows="3" placeholder="Palabras clave"></textarea></div>
+                        <form id="noticiasForm" class="p-3 p-xl-4" data-bs-theme="light">
+                            <div class="mb-3"><input class="shadow form-control" type="text" id="lugar" placeholder="Lugar"></div>
+                            <div class="mb-3"><input class="shadow form-control" type="date" id="fecha"  placeholder="Fecha"></div>
+                            <div class="mb-3"><textarea class="shadow form-control" id="palabrasClave" rows="3" placeholder="Palabras clave"></textarea></div>
                             <div>
-                                <button type="submit" class="btn btn-primary shadow d-block w-100">Generar</button>
+                                <button type="submit" id="botonEncontrar" class="btn btn-primary shadow d-block w-100">Generar</button>
                             </div>
                         </form>
                     </div>
@@ -79,35 +79,60 @@
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        document.getElementById('noticiasForm').addEventListener('submit', function(event){
-            var lugar = document.getElementById('name-1').value;
-            var fecha = document.getElementsByName('fecha')[0].value;
-            var palabrasClave = document.getElementById('message-1').value;
-        
-            if (lugar === '' || fecha === '' || palabrasClave === '') {
-                Swal.fire('Por favor, ingresa todos los datos que necesitamos para generar tu artículo');
-                event.preventDefault(); // Evita que se envíe el formulario
-            } else {
-                Swal.fire({
-                    title: 'Buscando noticias...',
-                    text: 'Por favor espera mientras se realiza la búsqueda.',
-                    showConfirmButton: false,
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    }
-                });
-                window.addEventListener('unload', function() {
-                    Swal.close();
-                });
+        document.getElementById('botonEncontrar').addEventListener('click', function(event){
+        event.preventDefault(); // Esto previene que el formulario se envíe de manera tradicional
 
-            }
-        });
-        </script>
-    
+        var lugar = document.getElementById('lugar').value;
+        var fecha = document.getElementById('fecha').value;
+        var palabrasClave = document.getElementById('palabrasClave').value;
         
+        console.log(lugar, fecha, palabrasClave)
+        // Verificar que todos los campos estén llenos antes de enviar la solicitud
+        if (lugar === '' || fecha === '' || palabrasClave === '') {
+            Swal.fire('Por favor, ingresa todos los datos que necesitamos para generar tu artículo');
+            return; 
+        }
+        
+        else {
+            // Mostrar SweetAlert con indicador de carga
+            Swal.fire({
+                title: 'Buscando noticias...',
+                text: 'Por favor espera mientras se realiza la búsqueda.',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('/encontrar-noticias', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    lugar: lugar,
+                    fecha: fecha,
+                    palabrasClave: palabrasClave
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                    Swal.close();
+                } else {
+                    console.error(data.message || 'Error desconocido');
+                    Swal.close();
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            })
+        }
+    }); 
+    </script>
 
 </body>
 
