@@ -60,6 +60,8 @@ def generar_nueva_noticia_gpt_noticias(noticias):
     try:
         completion = client.chat.completions.create(
             model="ft:gpt-3.5-turbo-0125:personal:noticias-bal:973thBIi",
+            temperature=0.5,
+            max_tokens=500,
             messages=[
                 {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
                 {"role": "user", "content": f"{prompt}"}
@@ -93,6 +95,7 @@ def generar_nueva_noticia_gpt_base(noticias):
     try:
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
+            max_tokens=500,
             messages=[
                 {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
                 {"role": "user", "content": f"{prompt}"}
@@ -169,7 +172,7 @@ def generar_nuevo_titulo(nueva_noticia):
         try:
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                max_tokens=30,
+                max_tokens=20,
                 temperature=0.5,
                 messages=[
                     {"role": "system", "content": "Tu tarea es escribir un título adecuado para la noticia que se te presenta."},

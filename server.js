@@ -452,7 +452,7 @@ app.post('/generar-noticias', async (req, res) => {
 // Función para enviar consulta de buscar noticias a recuperaciónNoticias.py
 function buscarNoticias(consulta) {
     return new Promise((resolve, reject) => {
-        //console.log('Enviando consulta a Python:', consulta);
+        console.log('Enviando consulta a Python:', consulta);
         const procesoPython = spawn('python', ['recuperacionNoticias.py', consulta]);
         let resultados = '';
 
