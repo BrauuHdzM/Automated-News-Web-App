@@ -162,6 +162,18 @@
                 });
 
                 document.getElementById('botonGenerar').addEventListener('click', function() {
+                    const checkboxes = document.querySelectorAll('.form-check-input:checked:not([name="modelSelection"])');
+                    if (checkboxes.length === 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No hay noticias seleccionadas',
+                            text: 'Por favor, seleccione al menos una noticia para continuar.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
                     Swal.fire({
                         title: 'Generando artículo...',
                         text: 'Por favor, espera un momento.',
@@ -174,7 +186,6 @@
                     });
                 const modelSelected = document.querySelector('input[name="modelSelection"]:checked').value;
 
-                const checkboxes = document.querySelectorAll('.form-check-input:checked:not([name="modelSelection"])');
                 const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
                     const cardBody = checkbox.closest('.card-body');
                     return {

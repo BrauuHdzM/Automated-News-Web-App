@@ -59,6 +59,10 @@
                 <div id= "fecha" class="col-md-8 col-xl-6 text-center mx-auto">
                 <p>Fecha</p>
             </div>
+            <div class="row mb-5">   
+                <div id= "modelo" class="col-md-8 col-xl-6 text-center mx-auto">
+                <p>Creado con: </p>
+            </div>
             </div>
             <div class="col mb-1">
                 <div class="d-flex align-items-center align-items-sm-start"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-quote fs-1 text-warning flex-shrink-0">
@@ -120,7 +124,7 @@
             document.getElementById('titulo').textContent = articulo.titulo;
             document.getElementById('fecha').textContent = articulo.fecha;
             document.getElementById('articulo').textContent = articulo.contenido;
-
+            document.getElementById('modelo').textContent = "Creado con: " + articulo.modeloLenguaje;
             localStorage.setItem('idArticuloActual', articulo.idArticulo);
             
             localStorage.removeItem('articuloActual');
@@ -183,94 +187,102 @@
         });
     });
     </script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnCalificar = document.getElementById('calificarArticulo');
-        btnCalificar.addEventListener('click', function() {
-            const idArticulo = localStorage.getItem('idArticuloActual');
-        fetch(`/calificaciones/${idArticulo}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length) {
-                const calificaciones = data[0];
-                const ratingHTML = generateRatingHTML(calificaciones);
-                Swal.fire({
-                    title: 'Califica los aspectos del artículo',
-                    html: ratingHTML,
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Enviar calificaciones',
-                    cancelButtonText: 'Cancelar',
-                    didOpen: () => {
-                        document.querySelectorAll('.swal2-html-container .star-rating li').forEach(star => {
-                            star.addEventListener('click', function() {
-                                let allStars = this.parentNode.querySelectorAll('li');
-                                let index = Array.from(allStars).indexOf(this);
-                                allStars.forEach((s, idx) => {
-                                    if (idx <= index) {
-                                        s.classList.add('checked');
-                                    } else {
-                                        s.classList.remove('checked');
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnCalificar = document.getElementById('calificarArticulo');
+            btnCalificar.addEventListener('click', function() {
+                const idArticulo = localStorage.getItem('idArticuloActual');
+                fetch(`/calificaciones/${idArticulo}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length) {
+                        const calificaciones = data[0];
+                        const ratingHTML = generateRatingHTML(calificaciones);
+                        Swal.fire({
+                            title: 'Califica los aspectos del artículo',
+                            html: ratingHTML,
+                            focusConfirm: false,
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Enviar calificaciones',
+                            cancelButtonText: 'Cancelar',
+                            didOpen: () => {
+                                document.querySelectorAll('.swal2-html-container .star-rating li').forEach(star => {
+                                    star.addEventListener('click', function() {
+                                        let allStars = this.parentNode.querySelectorAll('li');
+                                        let index = Array.from(allStars).indexOf(this);
+                                        allStars.forEach((s, idx) => {
+                                            if (idx <= index) {
+                                                s.classList.add('checked');
+                                            } else {
+                                                s.classList.remove('checked');
+                                            }
+                                        });
+                                    });
+                                });
+                            },
+                            preConfirm: () => {
+                                const ratings = {};
+                                let isValid = true;
+                                document.querySelectorAll('.swal2-html-container .star-rating').forEach((ul) => {
+                                    const aspect = ul.dataset.aspecto;
+                                    const checkedStars = ul.querySelectorAll('.checked').length;
+                                    ratings[aspect] = checkedStars;
+                                    if (checkedStars === 0) {
+                                        isValid = false;
                                     }
                                 });
-                            });
-                        });
-                    },
-                    preConfirm: () => {
-                        const ratings = {};
-                        document.querySelectorAll('.swal2-html-container .star-rating').forEach((ul, index) => {
-                            const aspect = ul.dataset.aspecto;
-                            const checkedStars = ul.querySelectorAll('.checked').length;
-                            ratings[aspect] = checkedStars;
-                        });
-                        return fetch(`/calificaciones/${idArticulo}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(ratings)
-                        }).then(response => {
-                            if (!response.ok) {
-                                throw new Error('Failed to update ratings');
+                                if (!isValid) {
+                                    Swal.showValidationMessage('Todos los aspectos deben tener al menos 1 estrella.');
+                                    return false;
+                                }
+                                return fetch(`/calificaciones/${idArticulo}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(ratings)
+                                }).then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('Failed to update ratings');
+                                    }
+                                    return response.json();
+                                });
                             }
-                            return response.json();
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                console.log('Calificaciones actualizadas:', result.value);
+                                Swal.fire('Guardado', 'Las calificaciones han sido actualizadas.', 'success');
+                            }
                         });
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        console.log('Calificaciones actualizadas:', result.value);
-                        Swal.fire('Guardado', 'Las calificaciones han sido actualizadas.', 'success');
                     }
                 });
+            });
+    
+            function generateRatingHTML(calificaciones) {
+                let html = '';
+                const aspects = [
+                    { label: 'Título', key: 'calificacionTitulo' },
+                    { label: 'Contenido', key: 'calificacionContenido' },
+                    { label: 'Redacción', key: 'calificacionRedaccion' }
+                ];
+    
+                aspects.forEach(aspect => {
+                    const rating = calificaciones[0][aspect.key];
+                    console.log(`${aspect.label} rating: ${rating}`); 
+                    html += `<div><label>${aspect.label}:</label><ul class="star-rating" data-aspecto="${aspect.key}" style="padding: 0;">`;
+                    for (let i = 1; i <= 5; i++) {
+                        html += `<li style="display: inline; cursor: pointer;" class="${i <= rating ? 'checked' : ''}">★</li>`;
+                    }
+                    html += '</ul></div>';
+                });
+                return html;
             }
         });
-    });
-
-    function generateRatingHTML(calificaciones) {
-    let html = '';
-    const aspects = [
-        { label: 'Título', key: 'calificacionTitulo' },
-        { label: 'Contenido', key: 'calificacionContenido' },
-        { label: 'Redacción', key: 'calificacionRedaccion' }
-    ];
-
-    aspects.forEach(aspect => {
-        const rating = calificaciones[0][aspect.key];
-        console.log(`${aspect.label} rating: ${rating}`); 
-        html += `<div><label>${aspect.label}:</label><ul class="star-rating" data-aspecto="${aspect.key}" style="padding: 0;">`;
-        for (let i = 1; i <= 5; i++) {
-            html += `<li style="display: inline; cursor: pointer;" class="${i <= rating ? 'checked' : ''}">★</li>`;
-        }
-        html += '</ul></div>';
-    });
-    return html;
-}
-
-    });
     </script>
+    
         
 </body>
 

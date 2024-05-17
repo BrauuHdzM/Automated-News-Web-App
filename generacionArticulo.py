@@ -209,7 +209,7 @@ if __name__ == "__main__":
         fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
         
         if nueva_noticia:
-            print(json.dumps({"success": True, "data": nueva_noticia, "titulo": nuevo_titulo, "fecha": fecha}))
+            print(json.dumps({"success": True, "data": nueva_noticia, "titulo": nuevo_titulo, "fecha": fecha, "modelo": modelo}))
         else:
             print(json.dumps({"success": False, "error": "No se pudo generar una nueva noticia"}))
         

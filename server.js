@@ -517,9 +517,9 @@ app.post('/api/guardarArticulo', async (req, res) => {
   const connection = await getDbConnection();
     try {
       const userId = req.session.userId;
-      const { dataContenido, dataTitulo, dataFecha } = req.body; 
-      const sql = `INSERT INTO ArticuloNoticia (idUsuario, titulo, contenido, fecha) VALUES (?, ?, ?, ?)`;
-      const valores = [userId, dataTitulo, dataContenido, dataFecha];
+      const { dataContenido, dataTitulo, dataFecha, dataModelo } = req.body; 
+      const sql = `INSERT INTO ArticuloNoticia (idUsuario, titulo, contenido, fecha, modeloLenguaje) VALUES (?, ?, ?, ?, ?)`;
+      const valores = [userId, dataTitulo, dataContenido, dataFecha, dataModelo];
 
       // Ejecutar consulta y recuperar el ID insertado
       const [result] = await connection.execute(sql, valores);
@@ -630,7 +630,10 @@ app.get('/api/estadisticas', async (req, res) => {
     const [rows2] = await connection.query('SELECT COUNT(*) AS totalCalificaciones FROM CalificacionNoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0');
     const [rows3] = await connection.query('SELECT ROUND(AVG(calificacion_total),2) AS promedioCalificacionGral FROM (SELECT (calificacionTitulo + calificacionContenido + calificacionRedaccion) / 3 AS calificacion_total FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0) AS calificaciones_filtradas;')
     const [rows4] = await connection.query('SELECT ROUND(AVG(calificacionTitulo),2) AS promedioCalificacionTitulo, ROUND(AVG(calificacionContenido),2) AS promedioCalificacionContenido, ROUND(AVG(calificacionRedaccion),2) AS promedioCalificacionRedaccion FROM calificacionnoticia WHERE calificacionTitulo > 0 AND calificacionContenido > 0 AND calificacionRedaccion > 0;')
-    const [rows5] = await connection.query('SELECT titulo, fecha FROM articulonoticia ORDER BY idArticulo DESC LIMIT 3;')
+    const [rows5] = await connection.query(`SELECT ROUND(AVG(cn.calificacionTitulo), 2) AS promedioCalificacionTitulo, ROUND(AVG(cn.calificacionContenido), 2) AS promedioCalificacionContenido, ROUND(AVG(cn.calificacionRedaccion), 2) AS promedioCalificacionRedaccion FROM calificacionnoticia AS cn JOIN ArticuloNoticia AS an ON cn.idArticulo = an.idArticulo WHERE cn.calificacionTitulo > 0 AND cn.calificacionContenido > 0 AND cn.calificacionRedaccion > 0 AND an.modeloLenguaje = 'Gemini';`)
+    const [rows6] = await connection.query(`SELECT ROUND(AVG(cn.calificacionTitulo), 2) AS promedioCalificacionTitulo, ROUND(AVG(cn.calificacionContenido), 2) AS promedioCalificacionContenido, ROUND(AVG(cn.calificacionRedaccion), 2) AS promedioCalificacionRedaccion FROM calificacionnoticia AS cn JOIN ArticuloNoticia AS an ON cn.idArticulo = an.idArticulo WHERE cn.calificacionTitulo > 0 AND cn.calificacionContenido > 0 AND cn.calificacionRedaccion > 0 AND an.modeloLenguaje = 'GPT-3.5-Base';`)
+    const [rows7] = await connection.query(`SELECT ROUND(AVG(cn.calificacionTitulo), 2) AS promedioCalificacionTitulo, ROUND(AVG(cn.calificacionContenido), 2) AS promedioCalificacionContenido, ROUND(AVG(cn.calificacionRedaccion), 2) AS promedioCalificacionRedaccion FROM calificacionnoticia AS cn JOIN ArticuloNoticia AS an ON cn.idArticulo = an.idArticulo WHERE cn.calificacionTitulo > 0 AND cn.calificacionContenido > 0 AND cn.calificacionRedaccion > 0 AND an.modeloLenguaje = 'GPT-3.5-News';`)
+    const [rows8] = await connection.query('SELECT titulo, fecha FROM articulonoticia ORDER BY idArticulo DESC LIMIT 3;')
     res.json({ totalUsuarios: rows0[0].totalUsuarios, 
                totalArticulos: rows1[0].totalArticulos, 
                totalCalificaciones: rows2[0].totalCalificaciones,
@@ -638,7 +641,16 @@ app.get('/api/estadisticas', async (req, res) => {
                promedioCalificacionTitulo: rows4[0].promedioCalificacionTitulo,
                promedioCalificacionContenido: rows4[0].promedioCalificacionContenido,
                promedioCalificacionRedaccion: rows4[0].promedioCalificacionRedaccion,
-               ultimosArticulos: rows5});
+               promedioCalificacionTituloGemini: rows5[0].promedioCalificacionTitulo,
+               promedioCalificacionContenidoGemini: rows5[0].promedioCalificacionContenido,
+               promedioCalificacionRedaccionGemini: rows5[0].promedioCalificacionRedaccion,
+               promedioCalificacionTituloGPT35Base: rows6[0].promedioCalificacionTitulo,
+               promedioCalificacionContenidoGPT35Base: rows6[0].promedioCalificacionContenido,
+               promedioCalificacionRedaccionGPT35Base: rows6[0].promedioCalificacionRedaccion,
+               promedioCalificacionTituloGPT35News: rows7[0].promedioCalificacionTitulo,
+               promedioCalificacionContenidoGPT35News: rows7[0].promedioCalificacionContenido,
+               promedioCalificacionRedaccionGPT35News: rows7[0].promedioCalificacionRedaccion,
+               ultimosArticulos: rows8});
   } catch (error) {
     console.error('Error al obtener las estadísticas:', error);
     res.status(500).send('Error al obtener las estadísticas');

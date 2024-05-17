@@ -44,7 +44,7 @@
                 </nav>
                 <div class="container-fluid">
                     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-dark mb-0">Estadísticas</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#"></a>
+                        <h3 class="text-dark mb-0">Estadísticas generales</h3>
                     </div>
                     <div class="row">
                         <div class="col-md-6 col-xl-3 mb-4">
@@ -105,11 +105,14 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="card shadow mb-4"></div>
+                        <div class="d-sm-flex justify-content-between align-items-center mb-4">
+                            <h3 class="text-dark mb-0">Promedio de calificaciones por aspecto</h3>
+                        </div>
                         <div class="col-lg-3">
-                            <div class="card shadow mb-4"></div>
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="text-primary fw-bold m-0">Promedio de calificaciones por aspecto</h6>
+                                    <h6 class="text-primary fw-bold m-0">General</h6>
                                 </div>
                                 <div class="card-body">
                                     <h4 class="small fw-bold">Título<span id="promedioTitulo" class="float-end">Número</span></h4>
@@ -127,8 +130,74 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-lg-3">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="text-primary fw-bold m-0">Gemini</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="small fw-bold">Título<span id="promedioTituloGemini" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionTituloGemini" class="progress-bar bg-danger" aria-valuenow="1" aria-valuemin="0" aria-valuemax="5" style="width: 20%;"><span class="visually-hidden">20%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Contenido<span id="promedioContenidoGemini" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionContenidoGemini" class="progress-bar bg-warning" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Redacción<span id="promedioRedaccionGemini" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id= "barraCalificacionRedaccionGemini" class="progress-bar bg-primary" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="text-primary fw-bold m-0">GPT 3.5 Base</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="small fw-bold">Título<span id="promedioTituloGPTBase" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionTituloGPTBase" class="progress-bar bg-danger" aria-valuenow="1" aria-valuemin="0" aria-valuemax="5" style="width: 20%;"><span class="visually-hidden">20%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Contenido<span id="promedioContenidoGPTBase" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionContenidoGPTBase" class="progress-bar bg-warning" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Redacción<span id="promedioRedaccionGPTBase" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id= "barraCalificacionRedaccionGPTBase" class="progress-bar bg-primary" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="text-primary fw-bold m-0">GPT 3.5 para noticias</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="small fw-bold">Título<span id="promedioTituloGPTNoticias" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionTituloGPTNoticias" class="progress-bar bg-danger" aria-valuenow="1" aria-valuemin="0" aria-valuemax="5" style="width: 20%;"><span class="visually-hidden">20%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Contenido<span id="promedioContenidoGPTNoticias" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id="barraCalificacionContenidoGPTNoticias" class="progress-bar bg-warning" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                    <h4 class="small fw-bold">Redacción<span id="promedioRedaccionGPTNoticias" class="float-end">Número</span></h4>
+                                    <div class="progress mb-4">
+                                        <div id= "barraCalificacionRedaccionGPTNoticias" class="progress-bar bg-primary" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" style="width: 40%;"><span class="visually-hidden">40%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                 
+                    </div>
+                    <div class="row">
+                        <div class="card shadow mb-4">
+                        </div>
                         <div class="col-lg-9">
-                            <div class="card shadow mb-4"></div>
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
                                     <h6 class="text-primary fw-bold m-0">Últimos artículos</h6>
@@ -137,7 +206,7 @@
                                     <!-- Los artículos se insertarán aquí -->
                                 </ul>
                             </div>
-                        </div>                        
+                        </div> 
                     </div>
                 </div>
             </div>
@@ -167,6 +236,24 @@
                 document.getElementById('barraCalificacionTitulo').style.width = data.promedioCalificacionTitulo * 100 / 5 + '%';
                 document.getElementById('barraCalificacionContenido').style.width = data.promedioCalificacionContenido * 100 / 5 + '%';
                 document.getElementById('barraCalificacionRedaccion').style.width = data.promedioCalificacionRedaccion * 100 / 5 + '%';
+                document.getElementById('barraCalificacionTituloGemini').style.width = data.promedioCalificacionTituloGemini * 100 / 5 + '%';
+                document.getElementById('barraCalificacionContenidoGemini').style.width = data.promedioCalificacionContenidoGemini * 100 / 5 + '%';
+                document.getElementById('barraCalificacionRedaccionGemini').style.width = data.promedioCalificacionRedaccionGemini * 100 / 5 + '%';
+                document.getElementById('barraCalificacionTituloGPTBase').style.width = data.promedioCalificacionTituloGPT35Base * 100 / 5 + '%';
+                document.getElementById('barraCalificacionContenidoGPTBase').style.width = data.promedioCalificacionContenidoGPT35Base * 100 / 5 + '%';
+                document.getElementById('barraCalificacionRedaccionGPTBase').style.width = data.promedioCalificacionRedaccionGPT35Base * 100 / 5 + '%';
+                document.getElementById('barraCalificacionTituloGPTNoticias').style.width = data.promedioCalificacionTituloGPT35News * 100 / 5 + '%';
+                document.getElementById('barraCalificacionContenidoGPTNoticias').style.width = data.promedioCalificacionContenidoGPT35News * 100 / 5 + '%';
+                document.getElementById('barraCalificacionRedaccionGPTNoticias').style.width = data.promedioCalificacionRedaccionGPT35News * 100 / 5 + '%';
+                document.getElementById('promedioTituloGemini').innerText = data.promedioCalificacionTituloGemini;
+                document.getElementById('promedioContenidoGemini').innerText = data.promedioCalificacionContenidoGemini;
+                document.getElementById('promedioRedaccionGemini').innerText = data.promedioCalificacionRedaccionGemini;
+                document.getElementById('promedioTituloGPTBase').innerText = data.promedioCalificacionTituloGPT35Base;
+                document.getElementById('promedioContenidoGPTBase').innerText = data.promedioCalificacionContenidoGPT35Base;
+                document.getElementById('promedioRedaccionGPTBase').innerText = data.promedioCalificacionRedaccionGPT35Base;
+                document.getElementById('promedioTituloGPTNoticias').innerText = data.promedioCalificacionTituloGPT35News;
+                document.getElementById('promedioContenidoGPTNoticias').innerText = data.promedioCalificacionContenidoGPT35News;
+                document.getElementById('promedioRedaccionGPTNoticias').innerText = data.promedioCalificacionRedaccionGPT35News;
                 const listaUltimosArticulos = document.getElementById('latestArticlesList');
                 const articulos = data.ultimosArticulos;
                 listaUltimosArticulos.innerHTML = '';
