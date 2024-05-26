@@ -19,14 +19,11 @@
             <a class="navbar-brand" style="color: white;" href="/articulos"><span>Generación de noticias</span></a>
             <div class="collapse navbar-collapse" id="navcol-1">
                 <ul class="navbar-nav mx-auto">
-                    <!-- Tus otros elementos de navegación aquí -->
                 </ul>
-                <!-- Botón Regresar visible solo en pantallas grandes -->
                 <a class="btn btn-warning shadow d-none d-md-block" role="button" href="/articulos">Regresar</a>
             </div>
-            <!-- Botón Regresar con ícono visible solo en móviles -->
             <a class="btn btn-warning shadow d-md-none" role="button" href="/articulos">
-                <i class="bi bi-arrow-left"></i> <!-- Asumiendo que usas Bootstrap Icons -->
+                <i class="bi bi-arrow-left"></i> 
             </a>
         </div>
     </nav>
@@ -39,26 +36,21 @@
                     <div class="col-md-10 col-xl-12 text-center mx-auto">
                         <h2 class="display-6 fw-bold mb-5"><span class="pb-3 underline">Artículos encontrados</span></h2>
                     </div>
-            
                     <div class="w-20 my-2"></div>
-            
                     <div class="col-md-10 col-xl-12 text-center mx-auto mb-5">
                         <h4 class="fw-bold mb-3" style="font-size: 1.2rem;">1. Escoge un modelo de lenguaje</h4>
                         <div class="d-flex justify-content-center mb-3">
-                            <!-- Gemini Model Switch -->
                             <div class="form-check form-switch mx-2">
                                 <input class="form-check-input" type="radio" name="modelSelection" id="geminiModel" value="Gemini" checked>
-                                <label class="form-check-label" for="geminiModel">Gemini</label>
+                                <label class="form-check-label" for="geminiModel" data-toggle="tooltip" data-placement="top" title="Da contexto adicional, genera noticias más largas pero debes tener mayor cuidado al revisar la veracidad">Gemini</label>
                             </div>
-                            <!-- GPT 3.5 Base Model Switch -->
                             <div class="form-check form-switch mx-2">
                                 <input class="form-check-input" type="radio" name="modelSelection" id="gpt35BaseModel" value="GPT-3.5-Base">
-                                <label class="form-check-label" for="gpt35BaseModel">GPT 3.5 Base</label>
+                                <label class="form-check-label" for="gpt35BaseModel" data-toggle="tooltip" data-placement="top" title="Da contexto adicional, genera noticias más largas pero debes tener mayor cuidado al revisar la veracidad">GPT 3.5 Base</label>
                             </div>
-                            <!-- GPT 3.5 News Model Switch -->
                             <div class="form-check form-switch mx-2">
                                 <input class="form-check-input" type="radio" name="modelSelection" id="gpt35NewsModel" value="GPT-3.5-News">
-                                <label class="form-check-label" for="gpt35NewsModel">GPT 3.5 para noticias</label>
+                                <label class="form-check-label" for="gpt35NewsModel" data-toggle="tooltip" data-placement="top" title="Es nuestro modelo entrenado para generar noticias, es más concisco con la información y da contenido más corto">GPT 3.5 para noticias</label>
                             </div>
                         </div>
                     </div>
@@ -100,9 +92,16 @@
         </div>
     </div>
     </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script src="/js/startup-modern.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip(); 
+        });
+    </script>
     <script>
         window.onload = function() {
             fetch('/api/resultados-noticias')

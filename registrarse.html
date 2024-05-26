@@ -92,11 +92,9 @@
                 searchParams.append(pair[0], pair[1]);
             }
             
-            // Guardar el nombre de usuario en localStorage
-            const username = formData.get('usuario'); // Asumiendo que el campo se llama 'username'
+            const username = formData.get('usuario'); 
             localStorage.setItem('usuarioParaVerificacion', username);
 
-            // Mostrar pantalla de espera
             Swal.fire({
                 title: 'Procesando...',
                 text: 'Por favor, espere mientras enviamos su correo de verificación.',

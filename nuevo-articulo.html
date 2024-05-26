@@ -81,21 +81,19 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.getElementById('botonEncontrar').addEventListener('click', function(event){
-        event.preventDefault(); // Esto previene que el formulario se envíe de manera tradicional
+        event.preventDefault(); 
 
         var lugar = document.getElementById('lugar').value;
         var fecha = document.getElementById('fecha').value;
         var palabrasClave = document.getElementById('palabrasClave').value;
         
         console.log(lugar, fecha, palabrasClave)
-        // Verificar que todos los campos estén llenos antes de enviar la solicitud
         if (lugar === '' || fecha === '' || palabrasClave === '') {
             Swal.fire('Por favor, ingresa todos los datos que necesitamos para generar tu artículo');
             return; 
         }
         
         else {
-            // Mostrar SweetAlert con indicador de carga
             Swal.fire({
                 title: 'Buscando noticias...',
                 text: 'Por favor espera mientras se realiza la búsqueda.',
