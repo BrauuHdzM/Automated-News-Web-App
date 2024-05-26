@@ -59,6 +59,8 @@ def main():
 
     lugar =  consulta[0]['lugar']
 
+    fecha = consulta[0]['fecha']
+
      # Genera embeddings para la consulta y las noticias
     embeddings1 = client.embeddings.create(
     input=sentences1,
@@ -71,7 +73,7 @@ def main():
     cosine_scores = [cosine_similarity(embeddings1, embedding) for embedding in embeddings2]
 
     results = [
-        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[i], i, lugar) 
+        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[i], i, lugar, fecha) 
         for i in range(len(noticias))
     ]
 

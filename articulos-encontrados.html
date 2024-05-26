@@ -115,6 +115,13 @@
                     const botonGenerar = document.getElementById('botonGenerar');
     
                     if (resultados.length === 0) {
+                        localStorage.setItem('noHayResultados', 'true');
+                    }
+                    else {
+                        localStorage.setItem('noHayResultados', 'false');
+                    }
+
+                    if(localStorage.getItem('noHayResultados') === 'true') {
                         botonGenerar.hidden = true;
                         Swal.fire({
                             icon: 'info',
@@ -123,13 +130,14 @@
                             confirmButtonText: 'Regresar',
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                window.location.href = '/articulos';
+                                window.location.href = '/nuevo-articulo';
                             } else {
-                                window.location.href = '/articulos';
+                                window.location.href = '/nuevo-articulos';
                             }
                         });
                     } else {
                         resultados.forEach(noticia => {
+                            localStorage.setItem('fechaUsuario', noticia[7]);
                             const tarjetaNoticia = document.createElement('div');
                             tarjetaNoticia.className = 'card my-3';
                             tarjetaNoticia.innerHTML = `
@@ -137,7 +145,7 @@
                                                         <h4 class="card-title">${noticia[1]}</h4> <!-- Título de la noticia -->
                                                         <p class="card-date">${noticia[2]}</p> <!-- Fecha de publicación -->
                                                         <p class="card-source">${noticia[0]}</p> <!-- Medio que publica -->
-                                                        <p class="card-place">${noticia[6]}</p> <!-- Cuerpo de la noticia -->
+                                                        <p class="card-place">${noticia[6]}</p> <!-- Lugar -->
                                                         <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
                                                         <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
                                                         <div class="form-check form-switch mt-3 mb-3"> <!-- Añadido margen superior e inferior -->
@@ -196,6 +204,7 @@
                         cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
                         lugar: cardBody.querySelector('.card-place').textContent,
                         modelo: modelSelected,
+                        fechaUsuario: localStorage.getItem('fechaUsuario')
                     };
                 });
 

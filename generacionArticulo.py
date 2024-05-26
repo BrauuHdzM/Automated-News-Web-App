@@ -6,6 +6,7 @@ from openai import OpenAI
 from decouple import config
 from datetime import datetime
 import google.generativeai as genai
+import datetime
 
 def convertir_fecha_gmt_a_espanol(fecha_original):
     try:
@@ -40,6 +41,22 @@ def convertir_fecha_gmt_a_espanol(fecha_original):
     except KeyError as e:
         # Manejar el error si el mes no se encuentra en el diccionario
         return f"Error en el diccionario de meses: {e}"
+
+def convertir_fecha_usuario(fecha_str):
+    # Diccionario para convertir el número del mes a su nombre en español
+    meses = {
+        1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+        5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+        9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre"
+    }
+
+    # Convertir la cadena de fecha a un objeto datetime
+    fecha = datetime.datetime.strptime(fecha_str, "%Y-%m-%d")
+    
+    # Formatear la fecha en el formato deseado
+    fecha_formateada = f"{fecha.day} de {meses[fecha.month]} del {fecha.year}"
+    
+    return fecha_formateada
     
 def generar_nueva_noticia_gpt_noticias(noticias):
     client = OpenAI(api_key=config('OPENAI_API_KEY'), )
@@ -50,7 +67,7 @@ def generar_nueva_noticia_gpt_noticias(noticias):
     # Concatena los cuerpos de las noticias en un solo texto para usarlo como prompt
     texto_noticias = ' '.join(cuerpos_noticias)
     
-    fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+    fecha = convertir_fecha_usuario(noticias[0]['fechaUsuario'])
     lugar = noticias[0]['lugar']
 
     # Define un prompt para la generación de texto basado en las noticias procesadas
@@ -85,9 +102,10 @@ def generar_nueva_noticia_gpt_base(noticias):
     # Concatena los cuerpos de las noticias en un solo texto para usarlo como prompt
     texto_noticias = ' '.join(cuerpos_noticias)
     
-    fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+    fecha = convertir_fecha_usuario(noticias[0]['fechaUsuario'])
     lugar = noticias[0]['lugar']
 
+    
     # Define un prompt para la generación de texto basado en las noticias procesadas
     prompt = f"Crea un artículo de noticias con esta información: {texto_noticias}. Fecha: {fecha}. Lugar: {lugar}."
     
@@ -142,7 +160,7 @@ def generar_nueva_noticia_gemini(noticias):
     # Concatena los cuerpos de las noticias en un solo texto para usarlo como prompt
     texto_noticias = ' '.join(cuerpos_noticias)
     
-    fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+    fecha = convertir_fecha_usuario(noticias[0]['fechaUsuario'])
     lugar = noticias[0]['lugar']
 
     context = "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."
@@ -206,7 +224,7 @@ if __name__ == "__main__":
 
         nuevo_titulo = generar_nuevo_titulo(nueva_noticia)
 
-        fecha = convertir_fecha_gmt_a_espanol(noticias[0]['fecha'])
+        fecha = convertir_fecha_usuario(noticias[0]['fechaUsuario'])
         
         if nueva_noticia:
             print(json.dumps({"success": True, "data": nueva_noticia, "titulo": nuevo_titulo, "fecha": fecha, "modelo": modelo}))
