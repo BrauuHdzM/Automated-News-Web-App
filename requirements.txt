@@ -1,0 +1,8 @@
+openai
+python-decouple
+feedparser
+numpy
+certifi
+ssl
+urllib3
+google-generativeai
