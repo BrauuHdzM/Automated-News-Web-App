@@ -669,7 +669,11 @@ app.get('/reset-password-form', async (req, res) => {
 
 // Ruta de inicio de sesión
 app.get('/login', async (req, res) => {
+  if (req.session && req.session.userId) {
+    return res.redirect('/articulos')
+  } else {
     res.sendFile(__dirname + '/login.html');
+  }
 });
 
 // Ruta de pagina principal de articulos
@@ -739,7 +743,11 @@ app.get('/articulo', (req, res) => {
 
 // Ruta principal 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/main.html');
+  if (req.session && req.session.userId) {
+    return res.redirect('/articulos')
+  } else {
+    res.sendFile(__dirname + '/main.html');
+  }
 });
 
 // Iniciar el servidor
