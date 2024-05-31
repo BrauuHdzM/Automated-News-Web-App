@@ -56,8 +56,8 @@ def cosine_similarity(v1, v2):
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 def main():         
-    consulta = "mexico"
-    busqueda = "mexico amlo"
+    consulta = "Nueva York"
+    busqueda = "Donald Trump es culpable"
     print("Consulta de búsqueda:", busqueda)
     
     fuentes = [
