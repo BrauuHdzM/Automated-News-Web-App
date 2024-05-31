@@ -291,7 +291,7 @@ app.get('/logout', (req, res) => {
 // POST para modificar los datos del usuario
 app.post('/update-user', async (req, res) => {
   const { campoModificar, datoReemplazo, contrasena } = req.body;
-  const userId = req.session.userId; // Obtener el ID del usuario desde la sesión
+  const userId = req.session.userId; 
   const connection = await getDbConnection();
   try {
       // Verificar la contraseña actual antes de actualizar los datos
@@ -733,10 +733,10 @@ app.get('/admin', isAuthenticated, async (req, res) => {
 
 // Ruta GET para servir la página de registro
 app.get('/registrarse', (req, res) => {
-  // Asegúrate de que el archivo 'registrarse.html' exista en la carpeta 'assets'
   res.sendFile(__dirname + '/registrarse.html');
 });
 
+// Ruta GET para artículo
 app.get('/articulo', (req, res) => {
   res.sendFile(__dirname + '/articulo.html');
 });
