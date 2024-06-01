@@ -38,8 +38,13 @@
                 <div class="col-md-6">
                     <div>
                         <form id="deleteAccountForm" class="p-3 p-xl-4" method="post" data-bs-theme="light">
-                            <div class="mb-3"><input class="form-control" type="password" name="contrasena" placeholder="Contraseña" required style="text-align: center;"></div>
-                            <div class="btn-group shadow form-control" role="group">
+                            <div class="mb-3 position-relative">
+                                <input class="shadow form-control" type="password" id="contrasena" name="contrasena" placeholder="Contraseña" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword()">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="btn-group shadow form-control">
                                 <button class="btn btn-danger" type="submit">Eliminar cuenta</button>
                             </div>
                         </form>                        
@@ -101,6 +106,12 @@
                 }
             });
         });
+
+        function togglePassword() {
+            const passwordField = document.getElementById('contrasena');
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+        }
         </script>
         
 </body>

@@ -51,8 +51,11 @@
                             <div class="mb-3">
                                 <input class="shadow form-control" type="text" name="datoReemplazo" placeholder="Nuevo dato" required>
                             </div>
-                            <div class="mb-3">
-                                <input class="form-control" type="password" name="contrasena" placeholder="Contraseña actual" required>
+                            <div class="mb-3 position-relative">
+                                <input class="shadow form-control" type="password" id="contrasena" name="contrasena" placeholder="Contraseña actual" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword()">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
                             <div>
                                 <button class="btn btn-primary shadow d-block w-100" type="submit">Modificar</button>
@@ -103,6 +106,12 @@
                 Swal.fire('Error', 'Hubo un error al enviar la solicitud: ' + error, 'error');
             });
         });
+
+        function togglePassword() {
+            const passwordField = document.getElementById('contrasena');
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+        }
         </script>
 </body>
 
