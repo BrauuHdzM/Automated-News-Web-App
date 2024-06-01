@@ -263,7 +263,7 @@ app.post('/login', async (req, res) => {
               res.json({ success: false, message: 'Contraseña incorrecta' });
           }
       } else {
-          res.json({ success: false, message: 'Usuario no encontrado' });
+          res.json({ success: false, message: 'Usuario incorrecto' });
       }
   } catch (error) {
       console.error('Error al intentar iniciar sesión: ', error);

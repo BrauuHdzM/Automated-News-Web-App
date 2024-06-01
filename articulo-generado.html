@@ -89,6 +89,12 @@
             fetch('/api/articulo-generado')
                 .then(response => response.text())
                 .then(data => {
+                    Swal.fire({
+                        title: 'Artículo generado',
+                        text: 'El artículo ha sido generado con éxito y basado en la información que proporcionaste',
+                        icon: 'success',
+                        timer: 5000,
+                    });
                     let parsedResponse = JSON.parse(data);
                     let articulo = JSON.parse(parsedResponse.articulo);
                     let dataContenido = articulo.data;
@@ -248,8 +254,7 @@
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            console.log('Calificaciones actualizadas:', result.value);
-                            Swal.fire('Guardado', 'Las calificaciones han sido actualizadas.', 'success');
+                            Swal.fire('Calificado', 'Muchas gracias por evaluar el artículo', 'success');
                         }
                     });
                 }

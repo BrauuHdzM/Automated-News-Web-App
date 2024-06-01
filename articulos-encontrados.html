@@ -114,13 +114,13 @@
                         Swal.fire({
                             icon: 'info',
                             title: 'Sin resultados',
-                            text: 'No hemos encontrado una noticia similar en los medios que tenemos disponibles',
+                            text: 'No hemos encontrado una noticia similar en los medios consultados',
                             confirmButtonText: 'Regresar',
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 window.location.href = '/nuevo-articulo';
                             } else {
-                                window.location.href = '/nuevo-articulos';
+                                window.location.href = '/nuevo-articulo';
                             }
                         });
                     } else {
