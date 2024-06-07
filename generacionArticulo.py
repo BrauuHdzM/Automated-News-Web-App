@@ -84,14 +84,32 @@ def generar_nueva_noticia_gpt_noticias(noticias):
                 {"role": "user", "content": f"{prompt}"}
             ]
             )
-        
+    
         nueva_noticia = completion.choices[0].message.content
-        return nueva_noticia
+       
     
     except Exception as e:
 
         print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
         return ""
+    
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            max_tokens=500,
+            messages=[
+                {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
+                {"role": "user", "content": f" Parafrasea un poco este texto: {nueva_noticia}"}
+            ]
+            )
+         
+        nueva_noticia = completion.choices[0].message.content
+        return nueva_noticia
+    
+    except Exception as e:
+            
+            print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
+            return ""
 
 def generar_nueva_noticia_gpt_base(noticias):
     client = OpenAI(api_key=config('OPENAI_API_KEY'), )

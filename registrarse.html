@@ -40,7 +40,7 @@
                         <div class="mb-3"><input class="shadow-sm form-control" type="email" name="email" placeholder="Correo electrónico" required></div>
                         <div class="mb-3"><input class="form-control" type="text" name="usuario" placeholder="Usuario" required></div>
                         <div class="mb-3 position-relative">
-                            <input class="shadow form-control" type="password" id="contrasena" name="password" placeholder="Contraseña" required>
+                            <input class="shadow form-control" type="password" id="contrasena" name="password" placeholder="Contraseña" required data-toggle="tooltip" data-placement="top" title="La contraseña debe tener al menos 8 caracteres, incluir una mayúscula, una minúscula, un número y un carácter especial.">
                             <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword()">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -72,9 +72,15 @@
     </footer>
     
     <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="/js/startup-modern.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip(); 
+        });
+    </script>
     <script>
         document.getElementById('registrationForm').addEventListener('submit', function(event) {
             event.preventDefault();
