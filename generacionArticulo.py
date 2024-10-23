@@ -226,7 +226,6 @@ if __name__ == "__main__":
         # Extrae el 'medio' de cada noticia en la lista y elimina duplicados
         medios = list(set([noticia['medio'] for noticia in noticias]))
 
-        # Concatena los medios en un solo texto para usarlo como prompt
         medios_usados = "Realizado con información de: " + ", ".join(medios)
 
         # Concatenar nueva_noticia con medios_usados con un salto de línea entre ambos
