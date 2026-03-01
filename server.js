@@ -15,7 +15,15 @@ const dbConfig = {
   port: process.env.DB_PORT,        
   user: process.env.DB_USER,      
   password: process.env.DB_PASSWORD,  
-  database: process.env.DB_DATABASE     
+  ssl: {
+    // Esto es clave para el Bad Handshake en Aiven
+    minVersion: 'TLSv1.2', 
+    rejectUnauthorized: false
+  },
+  // ESTO FUERZA A LA LIBRERÍA A USAR EL PROTOCOLO COMPATIBLE
+  authPlugins: {
+    mysql_native_password: () => () => Buffer.from(process.env.DB_PASSWORD + '\0')
+  }
 };
 
 // Middleware para parsear el cuerpo de las solicitudes POST
@@ -46,7 +54,8 @@ const transporter = nodemailer.createTransport({
 
 // Obtener una conexión a la base de datos
 async function getDbConnection() {
-  return await mysql.createConnection(dbConfig);
+  // Usar la URI completa fuerza a mysql2 a configurar el SSL correctamente
+  return await mysql.createConnection(process.env.MYSQL_URL);
 }
 
 // Middleware de autenticación de sesión

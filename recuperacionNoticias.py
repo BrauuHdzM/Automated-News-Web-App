@@ -1,96 +1,108 @@
 import sys
 import json
-from openai import OpenAI
-from decouple import config
+import ssl
+import urllib.request
 import feedparser
 import numpy as np
 import certifi
-import ssl
-import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from openai import OpenAI
+from decouple import config
 
 client = OpenAI(api_key=config('OPENAI_API_KEY'))
-
-# Configurar SSL para usar los certificados de certifi
+THRESHOLD = config('SIMILARITY_THRESHOLD', default=0.55, cast=float)
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
-def obtener_noticias_desde_fuentes(fuentes):
-    noticias_descripciones = []
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-    for nombre_fuente, url_feed in fuentes:
-        try:
-            req = urllib.request.Request(url_feed, headers=headers)
-            with urllib.request.urlopen(req, context=ssl_context) as response:
-                data = response.read()
-                noticias = feedparser.parse(data)
-                for entrada in noticias.entries:
-                    if "opinion" not in entrada.link.lower():
-                        titulo = entrada.title
-                        descripcion = entrada.description
-                        fecha = entrada.published if 'published' in entrada else "Fecha no disponible"
-                        num_palabras_descripcion = len(descripcion.split())
-                        if num_palabras_descripcion > 5:
-                            noticias_descripciones.append((nombre_fuente, titulo, fecha, descripcion))
-        except Exception as e:
-            print(f"Error al procesar la fuente {nombre_fuente} con URL {url_feed}: {e}")
-    return noticias_descripciones
-
-def get_embedding(text, model="text-embedding-3-small"):
-    text = text.replace("\n", " ")
-    return client.embeddings.create(input=[text], model=model).data[0].embedding
+def descargar_una_fuente(fuente):
+    nombre_fuente, url_feed = fuente
+    noticias_fuente = []
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    
+    try:
+        req = urllib.request.Request(url_feed, headers=headers)
+        with urllib.request.urlopen(req, context=ssl_context, timeout=10) as response:
+            data = response.read()
+            feed = feedparser.parse(data)
+            for entrada in feed.entries:
+                if "opinion" not in entrada.link.lower():
+                    titulo = entrada.get('title', '')
+                    descripcion = entrada.get('description', '')
+                    fecha = entrada.get('published', "Fecha no disponible")
+                    
+                    if len(descripcion.split()) > 5:
+                        noticias_fuente.append((nombre_fuente, titulo, fecha, descripcion))
+    except Exception as e:
+        sys.stderr.write(f"Error en {nombre_fuente}: {e}\n")
+    
+    return noticias_fuente
 
 def cosine_similarity(v1, v2):
-    """Calcular la similitud del coseno entre dos vectores."""
-    v1 = np.array(v1)
-    v2 = np.array(v2)
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 def main():
-    json_string = sys.stdin.read()           
-    consulta = json.loads(json_string)
+    try:
+        input_data = sys.stdin.read()
+        if not input_data:
+            return
+        consulta_json = json.loads(input_data)
+        consulta = consulta_json[0]
 
-    busqueda = consulta[0]['lugar'] + " " + consulta[0]['palabrasClave']
-    fuentes = [
-        ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
-        ("Reforma", "https://www.reforma.com/rss/portada.xml"),
-        ("Reforma", "https://www.reforma.com/rss/internacional.xml"),
-        ("Reforma", "https://www.reforma.com/rss/cancha.xml"),
-        ("Reforma", "https://www.reforma.com/rss/justicia.xml"),
-        ("Reforma", "https://www.reforma.com/rss/ciudad.xml"),
-        ("Reforma", "https://www.reforma.com/rss/negocios.xml"),
-        ("Reforma", "https://www.reforma.com/rss/estados.xml"),
-        ("Reforma", "https://www.reforma.com/rss/nacional.xml"),
-        ("Reforma", "https://www.reforma.com/rss/ciencia.xml"),
-        ("Expansion", "https://expansion.mx/rss"),
-    ]
+        busqueda = f"{consulta['lugar']} {consulta['palabrasClave']}"
+        lugar = consulta['lugar']
+        fecha_req = consulta['fecha']
 
-    noticias = obtener_noticias_desde_fuentes(fuentes)
-    sentences1 = [busqueda]  # Usa la consulta aquí
-    sentences2 = [noticia[1] + " " + noticia[3] for noticia in noticias]
+        fuentes = [
+            ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
+            ("Expansion", "https://expansion.mx/rss"),
+            ("Reforma Portada", "https://www.reforma.com/rss/portada.xml"),
+            ("Reforma Inter", "https://www.reforma.com/rss/internacional.xml"),
+            ("Reforma Justicia", "https://www.reforma.com/rss/justicia.xml"),
+            ("Reforma Ciudad", "https://www.reforma.com/rss/ciudad.xml"),
+            ("Reforma Nacional", "https://www.reforma.com/rss/nacional.xml")
+        ]
 
-    lugar =  consulta[0]['lugar']
+        with ThreadPoolExecutor(max_workers=len(fuentes)) as executor:
+            resultados_listas = list(executor.map(descargar_una_fuente, fuentes))
+        
+        noticias = [n for sublista in resultados_listas for n in sublista]
 
-    fecha = consulta[0]['fecha']
+        if not noticias:
+            print(json.dumps({"success": True, "resultados": []}))
+            return
 
-     # Genera embeddings para la consulta y las noticias
-    embeddings1 = client.embeddings.create(
-    input=sentences1,
-    model="text-embedding-3-small"
-    ).data[0].embedding
+        textos_noticias = [f"{n[1]} {n[3]}" for n in noticias]
+        
+        res_embeddings = client.embeddings.create(
+            input=[busqueda] + textos_noticias,
+            model="text-embedding-3-small"
+        )
+        
+        emb_consulta = np.array(res_embeddings.data[0].embedding)
+        embs_noticias = [np.array(item.embedding) for item in res_embeddings.data[1:]]
 
-    embeddings2 = [get_embedding(sentence, model="text-embedding-3-small") for sentence in sentences2]
+        filtered_results = []
+        for i, emb_n in enumerate(embs_noticias):
+            score = cosine_similarity(emb_consulta, emb_n)
+            
+            if score >= THRESHOLD:
+                filtered_results.append([
+                    noticias[i][0],    # 0: fuente
+                    noticias[i][1],    # 1: titulo
+                    noticias[i][2],    # 2: fecha
+                    noticias[i][3],    # 3: descripcion
+                    round(float(score), 4), # 4: score
+                    i,                 # 5: indice
+                    lugar,             # 6: lugar
+                    fecha_req          # 7: fecha_consulta
+                ])
 
-    # Calcula similitud del coseno
-    cosine_scores = [cosine_similarity(embeddings1, embedding) for embedding in embeddings2]
+        filtered_results.sort(key=lambda x: x[4], reverse=True)
 
-    results = [
-        (noticias[i][0], noticias[i][1], noticias[i][2], noticias[i][3], cosine_scores[i], i, lugar, fecha) 
-        for i in range(len(noticias))
-    ]
+        print(json.dumps({"success": True, "resultados": filtered_results}))
 
-    #print(results)
-    filtered_results = [result for result in results if result[4] >= 0.55]
-
-    print(json.dumps({"success": True, "resultados": filtered_results}))
+    except Exception as e:
+        sys.stderr.write(f"Error: {str(e)}\n")
+        print(json.dumps({"success": False, "error": str(e)}))
 
 if __name__ == "__main__":
     main()
