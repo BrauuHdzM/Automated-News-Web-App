@@ -10,7 +10,8 @@ from openai import OpenAI
 from decouple import config
 
 client = OpenAI(api_key=config('OPENAI_API_KEY'))
-THRESHOLD = config('SIMILARITY_THRESHOLD', default=0.55, cast=float)
+THRESHOLD_MIN = config('SIMILARITY_THRESHOLD_MIN', default=0.55, cast=float)
+THRESHOLD_MAX = config('SIMILARITY_THRESHOLD_MAX', default=1.0, cast=float)
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
 def descargar_una_fuente(fuente):
@@ -84,7 +85,7 @@ def main():
         for i, emb_n in enumerate(embs_noticias):
             score = cosine_similarity(emb_consulta, emb_n)
             
-            if score >= THRESHOLD:
+            if score >= THRESHOLD_MIN and score <= THRESHOLD_MAX:
                 filtered_results.append([
                     noticias[i][0],    # 0: fuente
                     noticias[i][1],    # 1: titulo

@@ -130,31 +130,8 @@ def generar_nueva_noticia_gpt_base(noticias):
         return ""
 
 def generar_nueva_noticia_gemini(noticias):
-    genai.configure(api_key=config('GOOGLE_API_KEY'))
+    client = OpenAI(api_key=config('OPENAI_API_KEY'), )
 
-    safety_settings = [
-    {
-        "category": "HARM_CATEGORY_DANGEROUS",
-        "threshold": "BLOCK_NONE",
-    },
-    {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_NONE",
-    },
-    {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_NONE",
-    },
-    {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_NONE",
-    },
-    {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_NONE",
-    },
-    ]
-    
     # Extrae el 'cuerpo' de cada noticia en la lista
     cuerpos_noticias = [noticia['cuerpo'] for noticia in noticias]
     
@@ -164,24 +141,27 @@ def generar_nueva_noticia_gemini(noticias):
     fecha = convertir_fecha_usuario(noticias[0]['fechaUsuario'])
     lugar = noticias[0]['lugar']
 
-    context = "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."
-
+    
     # Define un prompt para la generación de texto basado en las noticias procesadas
-    prompt = f"{context} Crea un artículo de noticias con esta información: {texto_noticias}. Fecha: {fecha}. Lugar: {lugar}."
+    prompt = f"Crea un artículo de noticias con esta información: {texto_noticias}. Fecha: {fecha}. Lugar: {lugar}."
     
-    model = genai.GenerativeModel(model_name="gemini-pro",
-                              safety_settings=safety_settings)
-    
-    # Realiza la llamada a la API de Google para generar la nueva noticia
+    # Realiza la llamada a la API de OpenAI para generar la nueva noticia
     try:
-        response = model.generate_content(prompt)
-        nueva_noticia = response.text
-
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            max_tokens=500,
+            messages=[
+                {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
+                {"role": "user", "content": f"{prompt}"}
+            ]
+            )
+        
+        nueva_noticia = completion.choices[0].message.content
         return nueva_noticia
     
     except Exception as e:
 
-        print(f"Error al generar nueva noticia con Google: {e}", file=sys.stderr)
+        print(f"Error al generar nueva noticia con OpenAI: {e}", file=sys.stderr)
         return ""
     
 def generar_nuevo_titulo(nueva_noticia):
