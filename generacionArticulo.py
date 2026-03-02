@@ -77,8 +77,8 @@ def generar_nueva_noticia_gpt_noticias(noticias):
     try:
         completion = client.chat.completions.create(
             model="ft:gpt-3.5-turbo-0125:personal:noticias-bal:973thBIi",
-            temperature=0.7,
-            max_tokens=500,
+            temperature=1.0,
+            max_tokens=1024,
             messages=[
                 {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
                 {"role": "user", "content": f"{prompt}"}
@@ -86,7 +86,17 @@ def generar_nueva_noticia_gpt_noticias(noticias):
             )
         
         nueva_noticia = completion.choices[0].message.content
-        return nueva_noticia
+
+        completion2 = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=1.0,
+            max_tokens=1024,
+            messages=[
+                {"role": "system", "content": "Tu tarea es ayudar a parafrasear y mejorar un poco la redacción del texto que se te ofrece."},
+                {"role": "user", "content": f"Con el siguiente artículo de noticia generado por un modelo de lenguaje, mejora la redacción y parafrasea el texto para que suene más natural: {nueva_noticia}, no inventes informacion adicional ni inventes datos que no estén expresamente mencionados en el texto."}
+            ]
+            )
+        return completion2.choices[0].message.content
     
     except Exception as e:
 
@@ -114,7 +124,7 @@ def generar_nueva_noticia_gpt_base(noticias):
     try:
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            max_tokens=500,
+            max_tokens=1024,
             messages=[
                 {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
                 {"role": "user", "content": f"{prompt}"}
@@ -149,7 +159,7 @@ def generar_nueva_noticia_gemini(noticias):
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
-            max_tokens=500,
+            max_tokens=1024,
             messages=[
                 {"role": "system", "content": "Tu tarea es escribir artículos de noticia que contengan siempre una fecha, un lugar y un acontecimiento. No puedes inventar información que no se te da, utiliza lenguaje formal."},
                 {"role": "user", "content": f"{prompt}"}
