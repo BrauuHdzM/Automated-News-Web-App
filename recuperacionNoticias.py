@@ -10,8 +10,6 @@ from openai import OpenAI
 from decouple import config
 
 client = OpenAI(api_key=config('OPENAI_API_KEY'))
-THRESHOLD_MIN = config('SIMILARITY_THRESHOLD_MIN', default=0.55, cast=float)
-THRESHOLD_MAX = config('SIMILARITY_THRESHOLD_MAX', default=1.0, cast=float)
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 
 def descargar_una_fuente(fuente):
@@ -52,6 +50,9 @@ def main():
         lugar = consulta['lugar']
         fecha_req = consulta['fecha']
 
+        threshold_min = float(consulta.get('thresholdMin', 0.55))
+        threshold_max = float(consulta.get('thresholdMax', 1.0))
+
         fuentes = [
             ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
             ("Expansion", "https://expansion.mx/rss"),
@@ -85,7 +86,7 @@ def main():
         for i, emb_n in enumerate(embs_noticias):
             score = cosine_similarity(emb_consulta, emb_n)
             
-            if score >= THRESHOLD_MIN and score <= THRESHOLD_MAX:
+            if score >= threshold_min and score <= threshold_max:
                 filtered_results.append([
                     noticias[i][0],    # 0: fuente
                     noticias[i][1],    # 1: titulo

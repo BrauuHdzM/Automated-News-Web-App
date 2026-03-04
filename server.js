@@ -430,12 +430,12 @@ app.get('/api/recuperarNombre', async (req, res) => {
 
 // POST para solicitar la búsqueda de noticias
 app.post('/encontrar-noticias', async (req, res) => {
-  const { lugar, palabrasClave, fecha } = req.body;
+  const { lugar, palabrasClave, fecha, thresholdMin, thresholdMax } = req.body;
   const consulta =`${lugar}, ${palabrasClave}`;
   console.log('Consulta recibida: ', consulta);
 
   try {
-      const resultados = await buscarNoticias(JSON.stringify([{ lugar, palabrasClave, fecha }]));
+      const resultados = await buscarNoticias(JSON.stringify([{ lugar, palabrasClave, fecha, thresholdMin: thresholdMin || 0.55, thresholdMax: thresholdMax || 1.0 }]));
       req.session.resultadosNoticias = resultados;
       console.log(resultados);
       res.json({success: true, redirectUrl: '/articulos-encontrados'});
@@ -448,10 +448,10 @@ app.post('/encontrar-noticias', async (req, res) => {
 
 // POST para generar un artículo a partir de las noticias seleccionadas
 app.post('/generar-noticias', async (req, res) => {
-  const { noticiasSeleccionadas } = req.body;
+  const { noticiasSeleccionadas, contenidoExtra } = req.body;
   try {
-      //console.log('Consultas recibidas: ', noticiasSeleccionadas);
-      const articulo = await generarArticulo(JSON.stringify(noticiasSeleccionadas));
+      const payload = { noticiasSeleccionadas: noticiasSeleccionadas || [], contenidoExtra: contenidoExtra || '' };
+      const articulo = await generarArticulo(JSON.stringify(payload));
       req.session.articuloGenerado = articulo; 
       res.json({success: true, redirectUrl: '/articulo-generado'});
   } catch (error) {

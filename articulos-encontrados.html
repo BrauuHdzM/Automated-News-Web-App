@@ -57,20 +57,38 @@
                     
             
                     <div class="col-md-10 col-xl-12 text-center mx-auto">
-                        <h4 class="fw-bold mb-3" style="font-size: 1.2rem;">2. Selecciona qué información agregar para complementar la creación de tu artículo de noticias</p>
+                        <h4 class="fw-bold mb-3" style="font-size: 1.2rem;">2. Selecciona qué información agregar para complementar la creación de tu artículo de noticias</h4>
                     </div>
                 </div>
 
             </div>
             <section id="resultados" class="pt-2 mt-2">
             </section>
-                        <div class="mb-3"></div>
+
+            <!-- Sección de contenido extra -->
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-10 col-xl-12">
+                    <div class="card">
                         <div class="card-body">
-                            <button id="botonGenerar" class="btn btn-primary d-block w-100" type="button">Generar noticia</button>
-                        </div>                        
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="habilitarContenidoExtra">
+                                <label class="form-check-label fw-bold" for="habilitarContenidoExtra">
+                                    <i class="bi bi-pencil-square"></i> Agregar contenido extra para la generación del artículo
+                                </label>
+                            </div>
+                            <div id="contenidoExtraContainer" style="display: none;">
+                                <p class="text-muted mb-2">Escribe información adicional que desees incluir en la generación del artículo. Si no seleccionas ninguna noticia, el artículo se generará únicamente con este contenido.</p>
+                                <textarea class="shadow form-control" id="contenidoExtra" rows="5" placeholder="Escribe aquí el contenido extra que deseas incluir en tu artículo..."></textarea>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="mb-3"></div>
+            <div class="card-body">
+                <button id="botonGenerar" class="btn btn-primary d-block w-100" type="button">Generar noticia</button>
+            </div>                        
         </div>
     </section>
     <footer>
@@ -92,6 +110,15 @@
         });
     </script>
     <script>
+        // Toggle para mostrar/ocultar el cuadro de contenido extra
+        document.getElementById('habilitarContenidoExtra').addEventListener('change', function() {
+            const container = document.getElementById('contenidoExtraContainer');
+            container.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) {
+                document.getElementById('contenidoExtra').value = '';
+            }
+        });
+
         window.onload = function() {
             fetch('/api/resultados-noticias')
                 .then(response => response.json())
@@ -110,18 +137,11 @@
                     }
 
                     if(localStorage.getItem('noHayResultados') === 'true') {
-                        botonGenerar.hidden = true;
                         Swal.fire({
                             icon: 'info',
                             title: 'Sin resultados',
-                            text: 'No hemos encontrado una noticia similar en los medios consultados',
-                            confirmButtonText: 'Regresar',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/nuevo-articulo';
-                            } else {
-                                window.location.href = '/nuevo-articulo';
-                            }
+                            text: 'No hemos encontrado una noticia similar en los medios consultados. Puedes agregar contenido extra para generar un artículo.',
+                            confirmButtonText: 'Entendido',
                         });
                     } else {
                         resultados.forEach(noticia => {
@@ -130,13 +150,13 @@
                             tarjetaNoticia.className = 'card my-3';
                             tarjetaNoticia.innerHTML = `
                                                     <div class="card-body">
-                                                        <h4 class="card-title">${noticia[1]}</h4> <!-- Título de la noticia -->
-                                                        <p class="card-date">${noticia[2]}</p> <!-- Fecha de publicación -->
-                                                        <p class="card-source">${noticia[0]}</p> <!-- Medio que publica -->
-                                                        <p class="card-place">${noticia[6]}</p> <!-- Lugar -->
-                                                        <p class="card-text">${noticia[3]}</p> <!-- Cuerpo de la noticia -->
+                                                        <h4 class="card-title">${noticia[1]}</h4>
+                                                        <p class="card-date">${noticia[2]}</p>
+                                                        <p class="card-source">${noticia[0]}</p>
+                                                        <p class="card-place">${noticia[6]}</p>
+                                                        <p class="card-text">${noticia[3]}</p>
                                                         <span class="badge bg-primary">Similitud: ${typeof noticia[4] === 'number' ? noticia[4].toFixed(2) : 'Error'}</span>
-                                                        <div class="form-check form-switch mt-3 mb-3"> <!-- Añadido margen superior e inferior -->
+                                                        <div class="form-check form-switch mt-3 mb-3">
                                                             <input class="form-check-input" type="checkbox" value="${noticia[5]}" id="includeNewsCheck${noticia[5]}">
                                                             <label class="form-check-label" for="includeNewsCheck${noticia[5]}">
                                                                 Incluir Noticia
@@ -158,12 +178,16 @@
                 });
 
                 document.getElementById('botonGenerar').addEventListener('click', function() {
-                    const checkboxes = document.querySelectorAll('.form-check-input:checked:not([name="modelSelection"])');
-                    if (checkboxes.length === 0) {
+                    const checkboxes = document.querySelectorAll('.form-check-input:checked:not([name="modelSelection"]):not(#habilitarContenidoExtra)');
+                    const contenidoExtra = document.getElementById('contenidoExtra').value.trim();
+                    const habilitarExtra = document.getElementById('habilitarContenidoExtra').checked;
+
+                    // Validar que al menos haya noticias seleccionadas o contenido extra
+                    if (checkboxes.length === 0 && (!habilitarExtra || contenidoExtra === '')) {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'No hay noticias seleccionadas',
-                            text: 'Por favor, seleccione al menos una noticia para continuar.',
+                            title: 'Sin información para generar',
+                            text: 'Por favor, seleccione al menos una noticia o agregue contenido extra para generar el artículo.',
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'OK'
                         });
@@ -180,52 +204,58 @@
                             Swal.showLoading();
                         }
                     });
-                const modelSelected = document.querySelector('input[name="modelSelection"]:checked').value;
 
-                const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
-                    const cardBody = checkbox.closest('.card-body');
-                    return {
-                        id: checkbox.value,
-                        titulo: escapeJSONString(cardBody.querySelector('.card-title').textContent),
-                        fecha: cardBody.querySelector('.card-date').textContent,
-                        medio: cardBody.querySelector('.card-source').textContent,
-                        cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
-                        lugar: cardBody.querySelector('.card-place').textContent,
-                        modelo: modelSelected,
-                        fechaUsuario: localStorage.getItem('fechaUsuario')
-                    };
-                });
+                    const modelSelected = document.querySelector('input[name="modelSelection"]:checked').value;
 
-                fetch('/generar-noticias', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ noticiasSeleccionadas}),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success && data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                        console.log(data);
+                    const noticiasSeleccionadas = Array.from(checkboxes).map(checkbox => {
+                        const cardBody = checkbox.closest('.card-body');
+                        return {
+                            id: checkbox.value,
+                            titulo: escapeJSONString(cardBody.querySelector('.card-title').textContent),
+                            fecha: cardBody.querySelector('.card-date').textContent,
+                            medio: cardBody.querySelector('.card-source').textContent,
+                            cuerpo: escapeJSONString(cardBody.querySelector('.card-text').textContent),
+                            lugar: cardBody.querySelector('.card-place').textContent,
+                            modelo: modelSelected,
+                            fechaUsuario: localStorage.getItem('fechaUsuario')
+                        };
+                    });
+
+                    fetch('/generar-noticias', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            noticiasSeleccionadas: noticiasSeleccionadas,
+                            contenidoExtra: habilitarExtra ? contenidoExtra : '',
+                            modelo: modelSelected,
+                            fechaUsuario: localStorage.getItem('fechaUsuario')
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success && data.redirectUrl) {
+                            window.location.href = data.redirectUrl;
+                            console.log(data);
+                            Swal.close();
+                        } else {
+                            console.error(data.message || 'Error desconocido');
+                            Swal.close();
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
                         Swal.close();
-                    } else {
-                        console.error(data.message || 'Error desconocido');
-                        Swal.close();
+                    });
+
+                    function escapeJSONString(str) {
+                        return str
+                            .replace(/"/g, '\\"')
+                            .replace(/\u201C/g, '\\"')
+                            .replace(/\u201D/g, '\\"');
                     }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    Swal.close();
                 });
-
-                function escapeJSONString(str) {
-                    return str
-                        .replace(/"/g, '\\"')
-                        .replace(/“/g, '\\"')
-                        .replace(/”/g, '\\"');
-                }
-            });
         };
     </script>
     

@@ -47,6 +47,20 @@
                             <div class="mb-3"><input class="shadow form-control" type="text" id="lugar" placeholder="Lugar"></div>
                             <div class="mb-3"><input class="shadow form-control" type="date" id="fecha"  placeholder="Fecha"></div>
                             <div class="mb-3"><textarea class="shadow form-control" id="palabrasClave" rows="3" placeholder="Palabras clave"></textarea></div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Umbral de similitud</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label text-muted" for="thresholdMin">Mínimo</label>
+                                        <input class="shadow form-control" type="number" id="thresholdMin" value="0.55" min="0" max="1" step="0.01" placeholder="Mínimo (0.55)">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-muted" for="thresholdMax">Máximo</label>
+                                        <input class="shadow form-control" type="number" id="thresholdMax" value="1.0" min="0" max="1" step="0.01" placeholder="Máximo (1.0)">
+                                    </div>
+                                </div>
+                                <small class="text-muted">Valores entre 0 y 1. Un umbral mínimo más alto muestra solo noticias más similares.</small>
+                            </div>
                             <div>
                                 <button type="submit" id="botonEncontrar" class="btn btn-primary shadow d-block w-100">Buscar noticias similares</button>
                             </div>
@@ -74,49 +88,56 @@
         var lugar = document.getElementById('lugar').value;
         var fecha = document.getElementById('fecha').value;
         var palabrasClave = document.getElementById('palabrasClave').value;
+        var thresholdMin = parseFloat(document.getElementById('thresholdMin').value);
+        var thresholdMax = parseFloat(document.getElementById('thresholdMax').value);
         
-        console.log(lugar, fecha, palabrasClave)
+        console.log(lugar, fecha, palabrasClave, thresholdMin, thresholdMax)
         if (lugar === '' || fecha === '' || palabrasClave === '') {
             Swal.fire('Por favor, ingresa todos los datos que necesitamos para generar tu artículo');
             return; 
         }
-        
-        else {
-            Swal.fire({
-                title: 'Buscando noticias...',
-                text: 'Por favor espera mientras se realiza la búsqueda.',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
 
-            fetch('/encontrar-noticias', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    lugar: lugar,
-                    fecha: fecha,
-                    palabrasClave: palabrasClave
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
-                    Swal.close();
-                } else {
-                    console.error(data.message || 'Error desconocido');
-                    Swal.close();
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            })
+        if (isNaN(thresholdMin) || isNaN(thresholdMax) || thresholdMin < 0 || thresholdMax > 1 || thresholdMin >= thresholdMax) {
+            Swal.fire('Por favor, verifica los umbrales de similitud. El mínimo debe ser menor que el máximo y ambos deben estar entre 0 y 1.');
+            return;
         }
+        
+        Swal.fire({
+            title: 'Buscando noticias...',
+            text: 'Por favor espera mientras se realiza la búsqueda.',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/encontrar-noticias', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lugar: lugar,
+                fecha: fecha,
+                palabrasClave: palabrasClave,
+                thresholdMin: thresholdMin,
+                thresholdMax: thresholdMax
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+                Swal.close();
+            } else {
+                console.error(data.message || 'Error desconocido');
+                Swal.close();
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        })
     }); 
     </script>
 
