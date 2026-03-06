@@ -56,11 +56,18 @@ def main():
         fuentes = [
             ("La Jornada", "https://www.jornada.com.mx/rss/edicion.xml?v=1"),
             ("Expansion", "https://expansion.mx/rss"),
+            ("Expansion Economia", "https://expansion.mx/rss/economia"),
+            ("Expansion Tecnologia", "https://expansion.mx/rss/tecnologia"),
+            ("Expansion Empresas", "https://expansion.mx/rss/empresas"),
             ("Reforma Portada", "https://www.reforma.com/rss/portada.xml"),
-            ("Reforma Inter", "https://www.reforma.com/rss/internacional.xml"),
+            ("Reforma Internacional", "https://www.reforma.com/rss/internacional.xml"),
             ("Reforma Justicia", "https://www.reforma.com/rss/justicia.xml"),
             ("Reforma Ciudad", "https://www.reforma.com/rss/ciudad.xml"),
-            ("Reforma Nacional", "https://www.reforma.com/rss/nacional.xml")
+            ("Reforma Nacional", "https://www.reforma.com/rss/nacional.xml"),
+            ("Reforma Cancha", "https://www.reforma.com/rss/cancha.xml"),
+            ("Reforma Gente", "https://www.reforma.com/rss/gente.xml"),
+            ("Reforma Cultura", "https://www.reforma.com/rss/cultura.xml"),
+            ("Reforma Ciencia", "https://www.reforma.com/rss/ciencia.xml")
         ]
 
         with ThreadPoolExecutor(max_workers=len(fuentes)) as executor:
